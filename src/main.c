@@ -1,20 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "rope.h"
 
 int main(void) {
-	printf("Hola mundo \n");
-	printf("Tamanio de un entero: %zu \n", sizeof(int));
 
-	FILE* input;
+    char hola1[] = "hola1";
+    char hola2[] = "hola2";
+    char hola3[] = "hola3";
+    char hola4[] = "hola4";
 
-	input = fopen("saraza", "r");
+    rope_node *node1 = create_rope();
+    rope_node *node2 = create_rope();
+    rope_node *node3 = create_rope();
+    rope_node *node4 = create_rope();
 
+    node1->word = hola1;
+    node2->word = hola2;
+    node3->word = hola3;
+    node4->word = hola4;
 
-	if (! input) {
-		printf("archivo no abierto (no existe ;) ) \n");
-		return EXIT_FAILURE;
-	}
+    rope_node *subroot12 = join(node1, node2);
+    rope_node *subroot34 = join(node3, node4);
+    rope_node *root = join(subroot12, subroot34);
 
+    print_rope(root);
+    destroy_rope(root);
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
