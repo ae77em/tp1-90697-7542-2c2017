@@ -4,36 +4,35 @@ void rope_node_create(rope_node* self) {
     self->left_child = NULL;
     self->right_child = NULL;
     self->word = NULL;
-    self->lenght = 0;
+    self->weight = 0;
 }
 
-void create_leaf(rope_node* self, char *str) {
+void rope_node_create_leaf(rope_node* self, char *str) {
     rope_node_create(self);
     self->word = str;
-    self->lenght = strlen(str);
+    self->weight = strlen(str);
 }
 
 void rope_node_destroy(rope_node* node) {
-    //    if (node == NULL) {
-    //        return;
-    //    }
-    //
-    //    rope_node_destroy(node->left_child);
-    //    rope_node_destroy(node->right_child);
-    //
-    //    free(node);
+    // si se hace, es recorrer todo el arbol y fritar los nodos...
 }
 
 void splitted_rope_create(splitted_rope *self) {
-    rope_node_create(self->left_tree);
-    rope_node_create(self->right_tree);
+    rope_node left;
+    rope_node right;
+
+    rope_node_create(&left);
+    rope_node_create(&right);
+
+    self->left_tree = &left;
+    self->right_tree = &right;
 }
 
 void splitted_rope_destroy(splitted_rope *sr) {
     free(sr);
 }
 
-void print_rope(rope_node *self, char *direction) {
+void print(rope_node *self, char *direction) {
     printf("\nvoy a la %s", direction);
 
     if (self == NULL) {
@@ -41,11 +40,13 @@ void print_rope(rope_node *self, char *direction) {
         return;
     }
 
-    print_rope(self->left_child, "izquierda");
-    print_rope(self->right_child, "derecha");
+    print(self->left_child, "izquierda");
+    print(self->right_child, "derecha");
 
     if (self->word != NULL) {
-        printf("%s\n", self->word);
+        printf("Palabra: %s \t\t Peso: %d\n", self->word, self->weight);
+    } else {
+        printf("Palabra: VACIO \t\t Peso: %d\n", self->weight);
     }
 }
 
@@ -68,50 +69,74 @@ splitted_string *split_string_at_pos(int pos, char* s) {
     return ss;
 }
 
-splitted_rope *split(int index, rope_node* node) {
-    splitted_rope* s = NULL;
+void split(splitted_rope *pair, int index, rope_node* node) {
+    splitted_rope_create(pair);
 
     if (node->left_child == NULL) {
-        assert(index > 0 && index <= node->lenght);
-        splitted_rope_create(s);
+        assert(index > 0 && index <= node->weight);
         if (index == 0) {
-            s->left_tree = NULL;
-            s->right_tree = node;
-        } else if (index == node->lenght) {
-            s->left_tree = node;
-            s->right_tree = NULL;
+            pair->left_tree = NULL;
+            pair->right_tree = node;
+        } else if (index == node->weight) {
+            pair->left_tree = node;
+            pair->right_tree = NULL;
         } else {
             splitted_string st = *split_string_at_pos(index, node->word);
-            create_leaf(s->left_tree, st.first_half);
-            create_leaf(s->right_tree, st.second_half);
-        }
-    } else if (index == node->lenght) {
-        splitted_rope_create(s);
-        s->left_tree = node->left_child;
-        s->right_tree = node->right_child;
-    } else if (index < node->lenght) {
-        splitted_rope_create(s);
-        splitted_rope pair = *split(index, node->left_child);
-        s->left_tree = pair.left_tree;
-        *s->right_tree = join(pair.right_tree, node->right_child);
-    } else {
-        splitted_rope_create(s);
-        splitted_rope pair = *split(index - node->lenght, node->right_child);
-        *s->left_tree = join(node->left_child, pair.left_tree);
-        s->right_tree = pair.right_tree;
-    }
 
-    return s;
+            rope_node left;
+            rope_node right;
+
+            rope_node_create(&left);
+            rope_node_create(&right);
+
+            pair->left_tree = &left;
+            pair->right_tree = &right;
+
+            rope_node_create_leaf(pair->left_tree, st.first_half);
+            rope_node_create_leaf(pair->right_tree, st.second_half);
+        }
+    } else if (index == node->weight) {
+        pair->left_tree = node->left_child;
+        pair->right_tree = node->right_child;
+    } else if (index < node->weight) {
+        splitted_rope tmp;
+        split(&tmp, index, node->left_child);
+        pair->left_tree = tmp.left_tree;
+        join(pair->right_tree, (& tmp)->right_tree, node->right_child);
+        //print_rope(node->right_child, "node->right_child");
+    } else {
+        splitted_rope tmp;
+        split(&tmp, index - node->weight, node->right_child);
+        join(pair->left_tree, node->left_child, tmp.left_tree);
+        pair->right_tree = tmp.right_tree;
+    }
 }
 
-rope_node join(rope_node* r1, rope_node* r2) {
-    rope_node joined;
-    rope_node_create(&joined);
+void join(rope_node *parent, rope_node* left_child, rope_node* right_child) {
+    parent->left_child = left_child;
+    parent->right_child = right_child;
+    parent->weight = calculate_weight(*&left_child);
+    parent->word = NULL;
+}
 
-    joined.left_child = r1;
-    joined.right_child = r2;
-    joined.lenght = r1->lenght + r2->lenght;
-    joined.word = NULL;
+int calculate_weight(rope_node *subtree) {
+    int current_weight = 0;
 
-    return joined;
+    if (subtree != NULL) {
+        current_weight += calculate_weight(subtree->left_child);
+
+        if (subtree->word != NULL) {
+            subtree->weight = strlen(subtree->word); // TODO: sacar cuando esté
+            //                                          seguro de que las hojas
+            //                                          siempre se crean con
+            //                                          peso.
+            current_weight += subtree->weight;
+        } else {
+            subtree->weight = current_weight;
+        }
+
+        current_weight += calculate_weight(subtree->right_child);
+    }
+
+    return current_weight;
 }
