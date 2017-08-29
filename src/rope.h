@@ -18,22 +18,18 @@ typedef struct {
     rope_node* right_tree;
 } splitted_rope;
 
-typedef struct {
-    char *first_half;
-    char *second_half;
-} splitted_string;
-
-void rope_node_create(rope_node *self);
-void rope_node_create_leaf(rope_node *self, char *word);
+rope_node* rope_node_create();
+void rope_node_initialize(rope_node *self);
+rope_node* rope_node_create_leaf(char *str);
 void rope_node_destroy(rope_node *self);
 
-void splitted_rope_create(splitted_rope *self);
+splitted_rope* splitted_rope_create();
 void splitted_rope_destroy(splitted_rope *self);
 
-void split(splitted_rope *sr, int index, rope_node* node);
+splitted_rope *split(int index, rope_node* node);
 void join(rope_node *parent, rope_node* left_child, rope_node* right_child);
 
 int calculate_weight(rope_node *subtree);
-void print(rope_node *self, char *direction);
+void print(rope_node *self);
 
 #endif
