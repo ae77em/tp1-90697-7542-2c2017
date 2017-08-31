@@ -5,31 +5,26 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include "rope_node.h"
+#include "splitted_rope.h"
 
-typedef struct rope_node {
-    int weight;
-    char *word;
-    struct rope_node *left_child;
-    struct rope_node *right_child;
-} rope_node;
+typedef struct rope {
+  rope_node *root;
+} rope;
 
-typedef struct {
-    rope_node* left_tree;
-    rope_node* right_tree;
-} splitted_rope;
+void rope_create(rope* self);
+void rope_destroy(rope *self);
 
-rope_node* rope_node_create();
-void rope_node_initialize(rope_node *self);
-rope_node* rope_node_create_leaf(char *str);
-void rope_node_destroy(rope_node *self);
-
-splitted_rope* splitted_rope_create();
-void splitted_rope_destroy(splitted_rope *self);
-
+/* basic operations */
 splitted_rope *split(int index, rope_node* node);
 void join(rope_node *parent, rope_node* left_child, rope_node* right_child);
+void insert(rope *tree, int pos, char *word);
+void delete(rope_node *tree, int start, int end);
 
-int calculate_weight(rope_node *subtree);
-void print(rope_node *self);
+void append(rope *tree, char *word);
+void print(rope *self);
+
+/* auxiliar operations */
+int is_empty(rope *self);
 
 #endif

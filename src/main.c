@@ -1,97 +1,110 @@
 #include "rope.h"
 
-int main(void) {
-    char *str1 = "Hello ";
-    char *str2 = "my ";
-    char *str3 = "na";
-    char *str4 = "me i";
-    char *str5 = "s";
-    char *str6 = " Simon";
+static char *cmd_fmt_insert = "\tinsert\t<pos>\t<text>";
+static char *cmd_fmt_delete = "\tdelete\t<pos>\t<from>";
+static char *cmd_fmt_space = "\tspace\t<pos>";
+static char *cmd_fmt_newline = "\tnewline\t<pos>";
+static char *cmd_fmt_print = "\tprint";
 
-    rope_node *leaf1 = rope_node_create_leaf(str1);
-    rope_node *leaf2 = rope_node_create_leaf(str2);
-    rope_node *leaf3 = rope_node_create_leaf(str3);
-    rope_node *leaf4 = rope_node_create_leaf(str4);
-    rope_node *leaf5 = rope_node_create_leaf(str5);
-    rope_node *leaf6 = rope_node_create_leaf(str6);
-    rope_node *root = rope_node_create();
+void print_invalid_command_message() {
+    puts("El comando ingresado es inválido.");
+    puts("Los comandos válidos, con sus parámetros, son:");
+    puts(cmd_fmt_insert);
+    puts(cmd_fmt_delete);
+    puts(cmd_fmt_space);
+    puts(cmd_fmt_newline);
+    puts(cmd_fmt_print);
 
-    puts("\n\nINICIA PRUEBA DE JOINEO");
-    rope_node *subroot12 = rope_node_create();
-    join(subroot12, leaf1, leaf2);
+}
 
-    rope_node *subroot34 = rope_node_create();
-    join(subroot34, leaf3, leaf4);
+void print_invalid_parameters_message(char *cmd_name, char *cmd_format) {
+    puts("Cantidad de parámetros incorrecta.");
+    printf("Formato de comando '%s':\n", cmd_name);
+    puts(cmd_format);
+}
 
-    rope_node *subroot56 = rope_node_create();
-    join(subroot56, leaf5, leaf6);
+/*
+ * posibles parámetros:
+ *
+ * insert​ ​ <pos>​ ​ <text>
+ * delete​ ​ <to>​ ​ <from>
+ * space​ ​ <pos>
+ * newline​ ​ <pos>
+ * print
+ */
+int main(int argc, char *argv[]) {
 
-    rope_node *subroot3456 = rope_node_create();
-    join(subroot3456, subroot34, subroot56);
+    int status = EXIT_FAILURE;
 
-    rope_node *left_root = rope_node_create();
-    join(left_root, subroot12, subroot3456);
+    char arguments[argc][255];
 
-    root->left_child = left_root;
-    calculate_weight(root);
+    for (int i = 1; i < argc; i++) {
+        sscanf(argv[i], "%s", arguments[i - 1]);
+        puts(arguments[i - 1]);
+    }
 
-    puts("imprimo arbol desde raíz");
-    print(root);
+    if (strcmp(arguments[0], "insert") == 0) {
+        if (argc == 4) {
+            puts("comando insert");
+            status = EXIT_SUCCESS;
+        } else {
+            print_invalid_parameters_message("insert", cmd_fmt_insert);
+        }
+    } else if (strcmp(arguments[0], "delete") == 0) {
+        if (argc == 4) {
+            puts("comando delete");
+            status = EXIT_SUCCESS;
+        } else {
+            print_invalid_parameters_message("delete", cmd_fmt_delete);
+        }
+    } else if (strcmp(arguments[0], "space") == 0) {
+        if (argc == 3) {
+            puts("comando space");
+            status = EXIT_SUCCESS;
+        } else {
+            print_invalid_parameters_message("insert", cmd_fmt_delete);
+        }
+    } else if (strcmp(arguments[0], "newline") == 0) {
+        if (argc == 3) {
+            puts("comando newline");
+            status = EXIT_SUCCESS;
+        } else {
+            print_invalid_parameters_message("insert", cmd_fmt_newline);
+        }
+    } else if (strcmp(arguments[0], "print") == 0) {
+        if (argc == 2) {
+            puts("comando print");
+            status = EXIT_SUCCESS;
+        } else {
+            print_invalid_parameters_message("insert", cmd_fmt_print);
+        }
+    } else {
+        print_invalid_command_message();
+    }
 
-    puts("\n\nFINALIZA PRUEBA DE JOINEO");
-    puts("=========================");
-    puts("\n\nINICIA PRUEBA DE SPLIT");
+    char str1[] = "Hola ";
+    char str2[] = "que tal";
+    char str3[] = "Pepo, ";
+    char str4[] = "?";
+    char str5[] = "¿";
 
-    splitted_rope *sr = split(3, root);
+    rope *tree = malloc(sizeof (rope));
+    rope_create(tree);
 
-    puts("imprimo arbol espliteado izquierdo");
-    print(sr->left_tree);
-    puts("\nimprimo arbol espliteado derecho");
-    print(sr->right_tree);
+    append(tree, str1);
+    print(tree);
+    append(tree, str2);
+    print(tree);
+    insert(tree, 5, str3);
+    print(tree);
+    append(tree, str4);
+    print(tree);
+    insert(tree, 0, str5);
+    print(tree);
+    insert(tree, 7, "\n***\n");
+    print(tree);
 
-    puts("\n\nFINALIZA PRUEBA DE SPLIT");
-    puts("\n=========================");
+    rope_destroy(tree);
 
-    puts("\n\nPRUEBA REJOINEADO");
-
-    join(root, sr->left_tree, sr->right_tree);
-
-    puts("imprimo arbol rejoineado");
-    print(root);
-
-    puts("\nFINALIZA PRUEBA REJOINEADO");
-    puts("\n=========================");
-
-    splitted_rope_destroy(sr);
-    rope_node_destroy(root);
-
-    free(leaf1);
-    leaf1 = NULL;
-    free(leaf2);
-    leaf2 = NULL;
-    free(leaf3);
-    leaf3 = NULL;
-    free(leaf4);
-    leaf4 = NULL;
-    free(leaf5);
-    leaf5 = NULL;
-    free(leaf6);
-    leaf6 = NULL;
-    free(subroot12);
-    subroot12 = NULL;
-    free(subroot34);
-    subroot34 = NULL;
-    free(subroot56);
-    subroot56 = NULL;
-    free(subroot3456);
-    subroot3456 = NULL;
-    free(left_root);
-    left_root = NULL;
-    free(root);
-    root = NULL;
-    //free(sr->left_tree);
-    //free(sr->right_tree);
-    free(sr);
-
-    return EXIT_SUCCESS;
+    return status;
 }
