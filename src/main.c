@@ -14,7 +14,6 @@ void print_invalid_command_message() {
     puts(cmd_fmt_space);
     puts(cmd_fmt_newline);
     puts(cmd_fmt_print);
-
 }
 
 void print_invalid_parameters_message(char *cmd_name, char *cmd_format) {
@@ -33,10 +32,11 @@ void print_invalid_parameters_message(char *cmd_name, char *cmd_format) {
  * print
  */
 int main(int argc, char *argv[]) {
-
     int status = EXIT_FAILURE;
 
-    char arguments[argc][255];
+    char arguments[5][255] = {
+        {0}
+    };
 
     for (int i = 1; i < argc; i++) {
         sscanf(argv[i], "%s", arguments[i - 1]);
@@ -82,26 +82,39 @@ int main(int argc, char *argv[]) {
         print_invalid_command_message();
     }
 
-    char str1[] = "Hola ";
-    char str2[] = "que tal";
-    char str3[] = "Pepo, ";
-    char str4[] = "?";
-    char str5[] = "¿";
-
-    rope *tree = malloc(sizeof (rope));
+    rope *tree = (rope *) malloc(sizeof (rope));
     rope_create(tree);
 
-    append(tree, str1);
+    append(tree, "Hola ");
     print(tree);
-    append(tree, str2);
+    insert(tree, 0, "*");
     print(tree);
-    insert(tree, 5, str3);
+    append(tree, "que tal");
     print(tree);
-    append(tree, str4);
+    insert(tree, 5, "Pepo, ");
     print(tree);
-    insert(tree, 0, str5);
+    append(tree, "?");
     print(tree);
-    insert(tree, 7, "\n***\n");
+    insert(tree, 3, "caca");
+    print(tree);
+    // insert(tree, 0, "¿"); // <- ocupa 2 bytes !!!
+    insert(tree, 1, "-"); // <- ocupa 2 bytes !!!
+    print(tree);
+    insert(tree, 0, "ooloo");
+    print(tree);
+    append(tree, " Bien, pero estresado :(");
+    print(tree);
+
+    delete(tree, 2, 3);
+    print(tree);
+
+    delete(tree, 5, 10);
+    print(tree);
+
+    delete(tree, 14, 16);
+    print(tree);
+
+    append(tree, "me voy a dormir...");
     print(tree);
 
     rope_destroy(tree);

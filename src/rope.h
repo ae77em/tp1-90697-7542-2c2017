@@ -1,6 +1,9 @@
 #ifndef SRC_ROPE_ROPE_H_
 #define SRC_ROPE_ROPE_H_
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -16,10 +19,10 @@ void rope_create(rope* self);
 void rope_destroy(rope *self);
 
 /* basic operations */
-splitted_rope *split(int index, rope_node* node);
+splitted_rope *split(rope_node* node, int index);
 void join(rope_node *parent, rope_node* left_child, rope_node* right_child);
 void insert(rope *tree, int pos, char *word);
-void delete(rope_node *tree, int start, int end);
+void delete(rope *tree, int start, int end);
 
 void append(rope *tree, char *word);
 void print(rope *self);
