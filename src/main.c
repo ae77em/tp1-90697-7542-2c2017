@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     delete(tree, 14, 16);
     print(tree);
 
-    append(tree, "me voy a dormir...");
+    insert(tree, 46, "|me voy a dormir...|");
     print(tree);
 
     rope_destroy(tree);

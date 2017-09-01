@@ -2,8 +2,11 @@
 
 /* helpers functions declaration */
 static int calculate_weight(rope_node *subtree);
+static int calculate_positive_position(int pos, int last_pos);
 static void print2(rope_node *subtree);
 static void initialize_empty_node(rope_node *node);
+static void insert2(rope *self, int pos, char *str);
+static void delete2(rope *tree, int start, int end);
 
 static const int MAX_BUFFER_SIZE = 4096; // pongo esto porque me lo sugiere
 //                                       // el cpplint
@@ -72,7 +75,6 @@ splitted_rope *split(rope_node* node, int index) {
 
             pair->left_tree = (rope_node*) malloc(sizeof (rope_node));
             initialize_empty_node(pair->left_tree);
-            //rope_node_create(pair->left_tree);
 
             pair->right_tree = tmp->right_tree;
 
@@ -111,8 +113,15 @@ static int calculate_weight(rope_node *subtree) {
 }
 
 void insert(rope *self, int pos, char *str) {
-    assert(pos >= 0 && pos <= self->root->weight);
 
+    int pos2 = calculate_positive_position(pos, self->root->weight);
+
+    assert(pos2 <= self->root->weight);
+
+    insert2(self, pos2, str);
+}
+
+static void insert2(rope *self, int pos, char *str) {
     if (is_empty(self)) {
         rope_node *lc = (rope_node*) malloc(sizeof (rope_node));
         initialize_empty_node(lc);
@@ -139,6 +148,7 @@ void insert(rope *self, int pos, char *str) {
             join(self->root, new_root, NULL);
         } else {
             join(new_root, sr->left_tree, new_leaf);
+
             rope_node *new_root2 = (rope_node*) malloc(sizeof (rope_node));
             initialize_empty_node(new_root2);
 
@@ -150,7 +160,16 @@ void insert(rope *self, int pos, char *str) {
     }
 }
 
-void delete(rope *tree, int start, int end) {
+void delete(rope *self, int start, int end) {
+    int start2 = calculate_positive_position(start, self->root->weight);
+    int end2 = calculate_positive_position(end, self->root->weight);
+
+    assert(start2 <= end2 && end2 <= self->root->weight);
+
+    delete2(self, start2, end2);
+}
+
+static void delete2(rope *tree, int start, int end) {
     assert(start >= 0 && end <= tree->root->weight);
 
     if (!is_empty(tree)) {
@@ -162,8 +181,6 @@ void delete(rope *tree, int start, int end) {
         join(new_root, sr1->left_tree, sr2->right_tree);
         join(tree->root, new_root, NULL);
 
-        //rope_destroy_nodes(sr1->right_tree);
-        //rope_destroy_nodes(sr2->left_tree);
         free(sr2);
         free(sr1);
     }
@@ -210,3 +227,12 @@ int is_empty(rope* self) {
             && self->root->left_child == NULL;
 }
 
+static int calculate_positive_position(int pos, int last_pos) {
+    int pos2 = pos;
+
+    if (pos2 < 0) {
+        pos2 = last_pos + pos2 + 1;
+    }
+
+    return pos2;
+}
