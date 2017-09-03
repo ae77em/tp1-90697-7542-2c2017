@@ -1,0 +1,10 @@
+insert    0    olamundo
+insert    0    H
+insert   -1    !
+insert    4    -
+insert   -1    Bien,-pero-estresado-:(
+delete    4    7
+space     4
+print
+
+
