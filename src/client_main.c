@@ -1,4 +1,4 @@
-#include "rope.h"
+#include "server_rope.h"
 
 static char *CMD_INSERT = "insert";
 static char *CMD_DELETE = "delete";
@@ -29,45 +29,6 @@ void print_invalid_param_msg(char *cmd_name, char *cmd_format) {
     puts(cmd_format);
 }
 
-void test_rope() {
-    rope_t *tree = (rope_t *) malloc(sizeof (rope_t));
-    rope_create(tree);
-
-    append(tree, "Hola ");
-    print(tree);
-    insert(tree, 0, "*");
-    print(tree);
-    append(tree, "que tal");
-    print(tree);
-    insert(tree, 5, "Pepo, ");
-    print(tree);
-    append(tree, "?");
-    print(tree);
-    insert(tree, 3, "caca");
-    print(tree);
-    // insert(tree, 0, "¿"); // <- ocupa 2 bytes !!!
-    insert(tree, 1, "-"); // <- ocupa 2 bytes !!!
-    print(tree);
-    insert(tree, 0, "ooloo");
-    print(tree);
-    append(tree, " Bien, pero estresado :(");
-    print(tree);
-
-    delete(tree, 2, 3);
-    print(tree);
-
-    delete(tree, 5, 10);
-    print(tree);
-
-    delete(tree, 14, 16);
-    print(tree);
-
-    insert(tree, 46, "|me voy a dormir...|");
-    print(tree);
-
-    rope_destroy(tree);
-}
-
 /*
  * posibles parámetros:
  *
@@ -94,16 +55,11 @@ int main(int argc, char *argv[]) {
     }
 
     int readcounter = 0;
-    //printf("~ ");
 
     while (fgets(line, sizeof (line) - 1, input) != NULL) {
         *cmd = '\0';
         fst_param = 0;
         *scnd_param = '\0';
-
-        //        if (input != stdin) {
-        //            printf("%s", line);
-        //        }
 
         readcounter = sscanf(line,
                 "%s %i %s",
@@ -146,8 +102,6 @@ int main(int argc, char *argv[]) {
                 print_invalid_cmd_msg();
             }
         }
-
-        //printf("~ ");
     }
 
     rope_destroy(tree);

@@ -1,7 +1,7 @@
 #ifndef SPLITTED_ROPE_H
 #define SPLITTED_ROPE_H
 
-#include "rope_node.h"
+#include "server_rope_node.h"
 
 typedef struct {
     rope_node_t* left_tree;

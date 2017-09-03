@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include "rope_node.h"
-#include "splitted_rope.h"
+#include "server_rope_node.h"
+#include "server_splitted_rope.h"
 
 typedef struct rope_t {
   rope_node_t *root;

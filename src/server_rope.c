@@ -1,4 +1,4 @@
-#include "rope.h"
+#include "server_rope.h"
 
 /* helpers functions declaration */
 static int calculate_weight(rope_node_t *subtree);

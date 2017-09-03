@@ -1,4 +1,4 @@
-#include "splitted_rope.h"
+#include "server_splitted_rope.h"
 
 splitted_rope_t* splitted_rope_create() {
     splitted_rope_t *pair
