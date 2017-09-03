@@ -5,23 +5,22 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct rope_node {
+typedef struct rope_node_t {
     int weight;
     char *word;
-    struct rope_node *left_child;
-    struct rope_node *right_child;
-} rope_node;
+    struct rope_node_t *left_child;
+    struct rope_node_t *right_child;
+} rope_node_t;
 
-void rope_node_create(rope_node *self);
-void rope_node_destroy(rope_node *self);
+void rope_node_create(rope_node_t *self);
+void rope_node_destroy(rope_node_t *self);
 
-void rope_destroy_nodes(rope_node *root);
+void rope_destroy_subtree(rope_node_t *root);
 
-void rope_node_initialize(rope_node *self);
+void rope_node_initialize(rope_node_t *self);
 
-void rope_node_create_leaf(rope_node* self, char *str);
-void rope_node_initialize_leaf(rope_node *self, char *str);
-
+void rope_node_create_leaf(rope_node_t* self, char *str);
+void rope_node_initialize_leaf(rope_node_t *self, char *str);
 
 #endif /* NODE_H */
 

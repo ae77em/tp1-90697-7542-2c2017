@@ -4,12 +4,12 @@
 #include "rope_node.h"
 
 typedef struct {
-    rope_node* left_tree;
-    rope_node* right_tree;
-} splitted_rope;
+    rope_node_t* left_tree;
+    rope_node_t* right_tree;
+} splitted_rope_t;
 
-splitted_rope* splitted_rope_create();
-void splitted_rope_destroy(splitted_rope *self);
+splitted_rope_t* splitted_rope_create();
+void splitted_rope_destroy(splitted_rope_t *self);
 
 #endif /* SPLITTED_ROPE_H */
 

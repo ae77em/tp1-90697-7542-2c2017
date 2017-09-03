@@ -1,9 +1,6 @@
 #ifndef SRC_ROPE_ROPE_H_
 #define SRC_ROPE_ROPE_H_
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -11,23 +8,23 @@
 #include "rope_node.h"
 #include "splitted_rope.h"
 
-typedef struct rope {
-  rope_node *root;
-} rope;
+typedef struct rope_t {
+  rope_node_t *root;
+} rope_t;
 
-void rope_create(rope* self);
-void rope_destroy(rope *self);
+void rope_create(rope_t* self);
+void rope_destroy(rope_t *self);
 
 /* basic operations */
-splitted_rope *split(rope_node* node, int index);
-void join(rope_node *parent, rope_node* left_child, rope_node* right_child);
-void insert(rope *tree, int pos, char *word);
-void delete(rope *tree, int start, int end);
+splitted_rope_t *split(rope_node_t* node, int index);
+void join(rope_node_t *p, rope_node_t* l, rope_node_t* r);
+void insert(rope_t *tree, int pos, char *word);
+void delete(rope_t *tree, int start, int end);
 
-void append(rope *tree, char *word);
-void print(rope *self);
+void append(rope_t *tree, char *word);
+void print(rope_t *self);
 
 /* auxiliar operations */
-int is_empty(rope *self);
+int is_empty(rope_t *self);
 
 #endif

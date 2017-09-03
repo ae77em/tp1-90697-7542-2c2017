@@ -1,8 +1,8 @@
 #include "splitted_rope.h"
 
-splitted_rope* splitted_rope_create() {
-    splitted_rope *pair
-            = (splitted_rope*) malloc(sizeof (splitted_rope));
+splitted_rope_t* splitted_rope_create() {
+    splitted_rope_t *pair
+            = (splitted_rope_t*) malloc(sizeof (splitted_rope_t));
 
     pair->left_tree = NULL;
     pair->right_tree = NULL;
@@ -10,7 +10,7 @@ splitted_rope* splitted_rope_create() {
     return pair;
 }
 
-void splitted_rope_destroy(splitted_rope *sr) {
-    rope_destroy_nodes(sr->left_tree);
-    rope_destroy_nodes(sr->right_tree);
+void splitted_rope_destroy(splitted_rope_t *sr) {
+    rope_destroy_subtree(sr->left_tree);
+    rope_destroy_subtree(sr->right_tree);
 }
