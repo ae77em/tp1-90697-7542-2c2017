@@ -21,7 +21,8 @@ void join(rope_node_t *p, rope_node_t* l, rope_node_t* r);
 void insert(rope_t *tree, int pos, char *word);
 void delete(rope_t *tree, int start, int end);
 
-void append(rope_t *tree, char *word);
+void space(rope_t *tree, int pos);
+void newline(rope_t *tree, int pos);
 void print(rope_t *self);
 
 /* auxiliar operations */

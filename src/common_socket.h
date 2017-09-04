@@ -1,9 +1,12 @@
+#ifndef COMMON_SOCKET_H
+#define COMMON_SOCKET_H
+
 #include <stddef.h>
 #include <sys/types.h>
 #include <string.h>
 
 typedef struct {
-	int socket;
+    int socket;
 } socket_t;
 
 int socket_create(socket_t *self);
@@ -15,3 +18,4 @@ int socket_send(socket_t *self, const char* buffer, size_t length);
 int socket_receive(socket_t *self, char* buffer, size_t length);
 void socket_shutdown(socket_t *self);
 
+#endif

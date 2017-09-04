@@ -161,25 +161,39 @@ int socket_send(socket_t *self, const char* buffer, size_t length) {
  * Recibe datos a través del socket.
  */
 int socket_receive(socket_t *self, char* buffer, size_t length) {
-    int sent = 0;
+    int received = 0;
     int s = 0;
     bool is_valid_socket = true;
+    bool has_ended = false;
 
-    while (sent < length && is_valid_socket) {
-        s = recv(self->socket, &buffer[sent], length - sent, MSG_NOSIGNAL);
+    while (received < length && is_valid_socket && !has_ended) {
+        s = recv(self->socket, &buffer[received], length - received, MSG_NOSIGNAL);
+
+        puts(buffer);
 
         if (s == 0) {
             is_valid_socket = false;
-            sent = ERR_SOCKET_CLOSED_RECEIVE;
+            received = ERR_SOCKET_CLOSED_RECEIVE;
         } else if (s < 0) {
             is_valid_socket = false;
-            sent = ERR_SOCKET_RECEIVE;
+            received = ERR_SOCKET_RECEIVE;
         } else {
-            sent += s;
+            received += s;
+            for (int i = 0; i < received; i++) {
+                if (buffer[i] == 4) { // valido EOT
+                    has_ended = true;
+                    break;
+                }
+            }
         }
+
+        for (int x = 0; x < received; x++) {
+            printf("%04x\n", buffer[x]);
+        }
+        puts("");
     }
 
-    return sent;
+    return received;
 }
 
 /*
