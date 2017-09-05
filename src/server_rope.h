@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 #include "server_rope_node.h"
 #include "server_splitted_rope.h"
 #include "common_socket.h"
@@ -25,7 +26,7 @@ void delete(rope_t *tree, int start, int end);
 void space(rope_t *tree, int pos);
 void newline(rope_t *tree, int pos);
 void print(rope_t *self);
-void sprint(rope_t *self, socket_t *socket);
+void sprint(rope_t *self, char *dest);
 
 /* auxiliar operations */
 int is_empty(rope_t *self);

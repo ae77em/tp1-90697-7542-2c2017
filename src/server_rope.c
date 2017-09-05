@@ -1,5 +1,6 @@
 #include "server_rope.h"
 #include "common_socket.h"
+#include "common_structs.h"
 
 char *SPACE = " ";
 char *NEWLINE = "\n";
@@ -8,7 +9,7 @@ char *NEWLINE = "\n";
 static int calculate_weight(rope_node_t *subtree);
 static int calculate_positive_position(int pos, int last_pos);
 static void print2(rope_node_t *subtree);
-static void sprint2(rope_node_t *subtree, socket_t *socket);
+static void sprint2(rope_node_t *subtree, char *dest);
 static void initialize_empty_node(rope_node_t *node);
 static void insert2(rope_t *self, int pos, char *str);
 static void delete2(rope_t *tree, int start, int end);
@@ -231,22 +232,23 @@ static void print2(rope_node_t *self) {
     }
 }
 
-void sprint(rope_t *tree, socket_t *socket) {
+void sprint(rope_t *tree, char *dest) {
     if (tree != NULL) {
-        sprint2(tree->root, socket);
+        sprint2(tree->root, dest);
     }
+    strncat(dest, "\n", 1);
 }
 
-static void sprint2(rope_node_t *self, socket_t *socket) {
+static void sprint2(rope_node_t *self, char *dest) {
     if (self == NULL) {
         return;
     }
 
-    print2(self->left_child);
-    print2(self->right_child);
+    sprint2(self->left_child, dest);
+    sprint2(self->right_child, dest);
 
     if (self->word != NULL) {
-        socket_send(socket, self->word, self->weight);
+        strncat(dest, self->word, self->weight);
     }
 }
 

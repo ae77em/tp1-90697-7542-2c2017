@@ -41,6 +41,7 @@ int socket_destroy(socket_t *self) {
     int status = EXIT_SUCCESS;
 
     status = close(self->socket);
+    free(self);
 
     return status;
 }
@@ -136,23 +137,24 @@ int socket_accept(socket_t *self, socket_t* accepted_socket) {
  * Envía datos a través del socket
  */
 int socket_send(socket_t *self, const char* buffer, size_t length) {
+    // no pude hacer andar ese loop :(
     int sent = 0;
-    int s = 0;
-    bool is_valid_socket = true;
+    //    int s = 0;
+    //    bool is_valid_socket = true;
+    //
+    //    while (sent < length && is_valid_socket) {
+    sent = send(self->socket, &buffer[0], length, MSG_NOSIGNAL);
 
-    while (sent < length && is_valid_socket) {
-        s = send(self->socket, &buffer[sent], length - sent, MSG_NOSIGNAL);
-
-        if (s == 0) {
-            is_valid_socket = false;
-            sent = ERR_SOCKET_CLOSED_SEND;
-        } else if (s < 0) {
-            is_valid_socket = false;
-            sent = ERR_SOCKET_SEND;
-        } else {
-            sent += s;
-        }
-    }
+    //        if (s == 0) {
+    //            is_valid_socket = false;
+    //            sent = ERR_SOCKET_CLOSED_SEND;
+    //        } else if (s < 0) {
+    //            is_valid_socket = false;
+    //            sent = ERR_SOCKET_SEND;
+    //        } else {
+    //            sent += s;
+    //        }
+    //    }
 
     return sent;
 }
@@ -162,22 +164,22 @@ int socket_send(socket_t *self, const char* buffer, size_t length) {
  */
 int socket_receive(socket_t *self, char* buffer, size_t length) {
     int received = 0;
-    int s = 0;
-    bool is_valid_socket = true;
-    bool has_ended = false;
+    //    int r = 0;
+    //    bool is_valid_socket = true;
+    //    bool has_ended = false;
+    //
+    //    while (received < length && is_valid_socket && !has_ended) {
+    received = recv(self->socket, &buffer[0], length, MSG_NOSIGNAL);
 
-    while (received < length && is_valid_socket && !has_ended) {
-        s = recv(self->socket, &buffer[received], length - received, MSG_NOSIGNAL);
-
-        if (s == 0) {
-            has_ended = true;
-        } else if (s < 0) {
-            is_valid_socket = false;
-            received = ERR_SOCKET_RECEIVE;
-        } else {
-            received += s;
-        }
-    }
+    //        if (r == 0) {
+    //            has_ended = true;
+    //        } else if (r < 0) {
+    //            is_valid_socket = false;
+    //            received = ERR_SOCKET_RECEIVE;
+    //        } else {
+    //            received += r;
+    //        }
+    //    }
 
     return received;
 }

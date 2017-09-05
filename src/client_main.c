@@ -1,7 +1,5 @@
 #include "client_main.h"
 
-#define MAX_RESPONSE_BUFFER 255
-
 char *CMD_INSERT = "insert";
 char *CMD_DELETE = "delete";
 char *CMD_SPACE = "space";
@@ -38,7 +36,6 @@ static void print_invalid_param_msg(char *cmd_name, char *cmd_format);
  * 4. Cerrar todos los sockets debidamente con close() al finalizar.
  */
 int client_main(int argc, char *argv[]) {
-
     FILE* input;
     unsigned short port;
 
@@ -82,7 +79,11 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
     socket_t *client_socket = (socket_t*) malloc(sizeof (socket_t));
 
     socket_create(client_socket);
-    socket_connect(client_socket, host, port);
+
+    if (socket_connect(client_socket, host, port) != EXIT_SUCCESS) {
+        socket_destroy(client_socket);
+        return;
+    }
 
     while (fgets(line, sizeof (line) - 1, file) != NULL) {
         *cmd = '\0';
@@ -131,13 +132,27 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
             }
         }
     }
+
+    char response_buffer[MAX_RECV_BUFFER] = {0};
+    int shift = sizeof (short);
+
+    int recv = socket_receive(client_socket, response_buffer, MAX_RECV_BUFFER);
+
+    socket_shutdown(client_socket);
+    socket_destroy(client_socket);
+
+    response_buffer[recv] = '\0';
+
+    if (recv > shift) {
+        printf("%s", response_buffer + shift);
+    }
 }
 
 static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
     int size_struct = sizeof (struct insert_command_t);
     size_struct -= sizeof (char*);
     int size_string = strlen(scnd_param);
-    char buffer[size_struct + size_string];
+    char buffer[MAX_SEND_BUFFER];
 
     struct insert_command_t sc = {
         .opcode = htonl(OPCODE_INSERT),
@@ -148,13 +163,13 @@ static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
     memcpy((void*) buffer, (void*) &sc, size_struct);
     memcpy((void*) (buffer + size_struct), (void*) scnd_param, size_string);
 
-    int lenght = sizeof (buffer);
+    int lenght = size_struct + size_string;
     socket_send(sock, buffer, lenght);
 }
 
 static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
     int size = sizeof (struct delete_command_t);
-    char buffer[size];
+    char buffer[MAX_SEND_BUFFER];
 
     struct delete_command_t sc = {
         .opcode = htonl(OPCODE_DELETE),
@@ -164,12 +179,12 @@ static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
 
     memcpy((void*) buffer, (void*) &sc, size);
 
-    socket_send(sock, buffer, sizeof (buffer));
+    socket_send(sock, buffer, size);
 }
 
 static void send_space(socket_t *sock, int fst_param) {
     int size = sizeof (struct space_command_t);
-    char buffer[size];
+    char buffer[MAX_RECV_BUFFER];
 
     struct space_command_t sc = {
         .opcode = htonl(OPCODE_SPACE),
@@ -178,12 +193,12 @@ static void send_space(socket_t *sock, int fst_param) {
 
     memcpy((void*) buffer, (void*) &sc, size);
 
-    socket_send(sock, buffer, sizeof (buffer));
+    socket_send(sock, buffer, size);
 }
 
 static void send_newline(socket_t *sock, int fst_param) {
     int size = sizeof (struct newline_command_t);
-    char buffer[size];
+    char buffer[MAX_SEND_BUFFER];
 
     struct newline_command_t nc = {
         .opcode = htonl(OPCODE_NEWLINE),
@@ -192,22 +207,18 @@ static void send_newline(socket_t *sock, int fst_param) {
 
     memcpy((void*) buffer, (void*) &nc, size);
 
-    socket_send(sock, buffer, sizeof (buffer));
+    socket_send(sock, buffer, size);
 }
 
-static void send_print(socket_t *sock) {
+static void send_print(socket_t * sock) {
     int size = sizeof (struct print_command_t);
-    char buffer[size];
-    char *response_buffer = (char *) (malloc(sizeof (char)));
+    char buffer[MAX_SEND_BUFFER];
 
     struct print_command_t pc = {.opcode = htonl(OPCODE_PRINT)};
 
     memcpy((void*) buffer, (void*) &pc, size);
 
-    socket_send(sock, buffer, sizeof (buffer));
-    socket_receive(sock, response_buffer, MAX_RESPONSE_BUFFER);
-
-    printf("%s\n", response_buffer);
+    socket_send(sock, buffer, size);
 }
 
 static void print_invalid_cmd_msg() {
