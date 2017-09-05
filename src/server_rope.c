@@ -234,7 +234,6 @@ static void print2(rope_node_t *self) {
 void sprint(rope_t *tree, socket_t *socket) {
     if (tree != NULL) {
         sprint2(tree->root, socket);
-        puts("");
     }
 }
 
@@ -248,7 +247,6 @@ static void sprint2(rope_node_t *self, socket_t *socket) {
 
     if (self->word != NULL) {
         socket_send(socket, self->word, self->weight);
-        //printf("%s", self->word);
     }
 }
 

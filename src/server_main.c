@@ -37,22 +37,20 @@ int server_main(int argc, char *argv[]) {
     rope_create(rope);
 
     socket_t * server_socket = (socket_t*) malloc(sizeof (socket_t));
-    socket_t * accepted_socket = (socket_t*) malloc(sizeof (socket_t));
+    socket_t * client_socket = (socket_t*) malloc(sizeof (socket_t));
 
     socket_create(server_socket);
     socket_bind_and_listen(server_socket, port);
-    socket_accept(server_socket, accepted_socket);
+    socket_accept(server_socket, client_socket);
 
-    char *buffer = (char*) malloc(sizeof (char));
+    char *temp_buffer = (char*) malloc(sizeof (char));
     int received;
 
-    received = socket_receive(accepted_socket, buffer, MAX_RECV_BUFFER);
+    received = socket_receive(client_socket, temp_buffer, MAX_RECV_BUFFER);
 
-    puts("----------");
-    for (int x = 0; x < received; x++) {
-        printf("%04x\n", buffer[x]);
-    }
-    puts("");
+    char buffer[received];
+    memcpy(buffer, temp_buffer, received);
+
     if (received > 0) {
         int ptr_shift = 0;
         int opcode;
@@ -60,40 +58,51 @@ int server_main(int argc, char *argv[]) {
         int pos;
         int pos_size = sizeof (int);
 
-        while (buffer[ptr_shift] != 4) { // EOT
+        while (ptr_shift < received) { // EOT
 
             opcode = 7; // lo seteo con una op invalida
             pos = -9999;
 
             memcpy((void*) &opcode, (void*) (buffer + ptr_shift), opcode_size);
+            opcode = ntohl(opcode);
 
             switch (opcode) {
                 case OPCODE_INSERT:
                     ptr_shift += opcode_size;
 
                     memcpy((void*) &pos, (void*) (buffer + ptr_shift), pos_size);
+                    pos = ntohl(pos);
 
                     ptr_shift += pos_size;
-                    int size;
-                    int size_size = sizeof (unsigned short);
+
+                    unsigned short size;
+                    unsigned short size_size = sizeof (unsigned short);
                     memcpy((void*) &size, (void*) (buffer + ptr_shift), size_size);
+                    size = ntohs(size);
 
                     ptr_shift += size_size;
-                    char *text = malloc(sizeof (char));
+                    char text[MAX_RECV_BUFFER];
                     strncpy(text, buffer + ptr_shift, size);
+                    text[size] = '\0';
                     ptr_shift += size;
 
                     insert(rope, pos, text);
 
-                    free(text);
                     break;
                 case OPCODE_DELETE:
                     ptr_shift += opcode_size;
+
                     memcpy((void*) &pos, (void*) (buffer + ptr_shift), pos_size);
+                    pos = ntohl(pos);
+
                     ptr_shift += pos_size;
+
                     int to;
-                    int to_size = sizeof (unsigned int);
+                    int to_size = sizeof (int);
+
                     memcpy((void*) &to, (void*) (buffer + ptr_shift), to_size);
+                    to = ntohl(to);
+
                     ptr_shift += to_size;
                     delete(rope, pos, to);
                     break;
@@ -101,6 +110,9 @@ int server_main(int argc, char *argv[]) {
                 case OPCODE_SPACE:
                     ptr_shift += opcode_size;
                     memcpy((void*) &pos, (void*) (buffer + ptr_shift), pos_size);
+
+                    pos = ntohl(pos);
+
                     ptr_shift += pos_size;
                     space(rope, pos);
                     break;
@@ -108,14 +120,18 @@ int server_main(int argc, char *argv[]) {
                 case OPCODE_NEWLINE:
                     ptr_shift += opcode_size;
                     memcpy((void*) &pos, (void*) (buffer + ptr_shift), pos_size);
+
+                    pos = ntohl(pos);
+
                     ptr_shift += pos_size;
                     newline(rope, pos);
                     break;
 
                 case OPCODE_PRINT:
                     ptr_shift += opcode_size;
-                    print(rope);
+                    sprint(rope, client_socket);
                     break;
+
                 default:
                     puts("Operación inexistente.");
             }
@@ -127,9 +143,13 @@ int server_main(int argc, char *argv[]) {
     socket_destroy(server_socket);
     rope_destroy(rope);
 
-    free(buffer);
-    free(accepted_socket);
+    free(temp_buffer);
+    free(client_socket);
     free(server_socket);
 
-    return EXIT_SUCCESS;
+    if (received >= 0) {
+        return EXIT_SUCCESS;
+    } else {
+        return EXIT_FAILURE;
+    }
 }

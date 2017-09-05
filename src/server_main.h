@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 
 #define MAX_RECV_BUFFER 255
 

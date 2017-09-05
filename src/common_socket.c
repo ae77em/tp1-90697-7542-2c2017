@@ -169,28 +169,14 @@ int socket_receive(socket_t *self, char* buffer, size_t length) {
     while (received < length && is_valid_socket && !has_ended) {
         s = recv(self->socket, &buffer[received], length - received, MSG_NOSIGNAL);
 
-        puts(buffer);
-
         if (s == 0) {
-            is_valid_socket = false;
-            received = ERR_SOCKET_CLOSED_RECEIVE;
+            has_ended = true;
         } else if (s < 0) {
             is_valid_socket = false;
             received = ERR_SOCKET_RECEIVE;
         } else {
             received += s;
-            for (int i = 0; i < received; i++) {
-                if (buffer[i] == 4) { // valido EOT
-                    has_ended = true;
-                    break;
-                }
-            }
         }
-
-        for (int x = 0; x < received; x++) {
-            printf("%04x\n", buffer[x]);
-        }
-        puts("");
     }
 
     return received;

@@ -37,5 +37,10 @@ struct print_command_t {
     int opcode;    
 } __attribute__((packed));
 
+struct response_command_t {
+    int opcode;
+    char *text;
+} __attribute__((packed));
+
 #endif /* COMMON_STRUCTS_H */
 

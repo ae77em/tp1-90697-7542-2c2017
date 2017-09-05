@@ -79,7 +79,7 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
 
     int readcounter = 0;
 
-    socket_t * client_socket = (socket_t*) malloc(sizeof (socket_t));
+    socket_t *client_socket = (socket_t*) malloc(sizeof (socket_t));
 
     socket_create(client_socket);
     socket_connect(client_socket, host, port);
@@ -140,9 +140,9 @@ static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
     char buffer[size_struct + size_string];
 
     struct insert_command_t sc = {
-        .opcode = OPCODE_INSERT,
-        .pos = fst_param,
-        .size = size_string
+        .opcode = htonl(OPCODE_INSERT),
+        .pos = htonl(fst_param),
+        .size = htons(size_string)
     };
 
     memcpy((void*) buffer, (void*) &sc, size_struct);
@@ -157,9 +157,9 @@ static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
     char buffer[size];
 
     struct delete_command_t sc = {
-        .opcode = OPCODE_DELETE,
-        .from = fst_param,
-        .to = scnd_param
+        .opcode = htonl(OPCODE_DELETE),
+        .from = htonl(fst_param),
+        .to = htonl(scnd_param)
     };
 
     memcpy((void*) buffer, (void*) &sc, size);
@@ -172,8 +172,8 @@ static void send_space(socket_t *sock, int fst_param) {
     char buffer[size];
 
     struct space_command_t sc = {
-        .opcode = OPCODE_SPACE,
-        .pos = fst_param
+        .opcode = htonl(OPCODE_SPACE),
+        .pos = htonl(fst_param)
     };
 
     memcpy((void*) buffer, (void*) &sc, size);
@@ -186,8 +186,8 @@ static void send_newline(socket_t *sock, int fst_param) {
     char buffer[size];
 
     struct newline_command_t nc = {
-        .opcode = OPCODE_NEWLINE,
-        .pos = fst_param
+        .opcode = htonl(OPCODE_NEWLINE),
+        .pos = htonl(fst_param)
     };
 
     memcpy((void*) buffer, (void*) &nc, size);
@@ -200,16 +200,14 @@ static void send_print(socket_t *sock) {
     char buffer[size];
     char *response_buffer = (char *) (malloc(sizeof (char)));
 
-    struct print_command_t pc = {.opcode = OPCODE_PRINT};
+    struct print_command_t pc = {.opcode = htonl(OPCODE_PRINT)};
 
     memcpy((void*) buffer, (void*) &pc, size);
 
     socket_send(sock, buffer, sizeof (buffer));
     socket_receive(sock, response_buffer, MAX_RESPONSE_BUFFER);
 
-    printf("%s", response_buffer);
-
-    free(response_buffer);
+    printf("%s\n", response_buffer);
 }
 
 static void print_invalid_cmd_msg() {
