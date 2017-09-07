@@ -94,16 +94,11 @@ int main(int argc, char *argv[]) {
     }
 
     int readcounter = 0;
-    //printf("~ ");
 
     while (fgets(line, sizeof (line) - 1, input) != NULL) {
         *cmd = '\0';
         fst_param = 0;
         *scnd_param = '\0';
-
-        //        if (input != stdin) {
-        //            printf("%s", line);
-        //        }
 
         readcounter = sscanf(line,
                 "%s %i %s",
@@ -138,7 +133,7 @@ int main(int argc, char *argv[]) {
                 }
             } else if (strcmp(cmd, CMD_PRINT) == 0) {
                 if (readcounter == 1) {
-                    print(tree);
+                    //print(tree);
                 } else {
                     print_invalid_param_msg(CMD_PRINT, CMD_FMT_PRINT);
                 }
@@ -146,8 +141,6 @@ int main(int argc, char *argv[]) {
                 print_invalid_cmd_msg();
             }
         }
-
-        //printf("~ ");
     }
 
     rope_destroy(tree);

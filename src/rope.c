@@ -4,16 +4,14 @@
 static int calculate_weight(rope_node_t *subtree);
 static int calculate_positive_position(int pos, int last_pos);
 static void print2(rope_node_t *subtree);
-static void initialize_empty_node(rope_node_t *node);
 static void insert2(rope_t *self, int pos, char *str);
 static void delete2(rope_t *tree, int start, int end);
 
-static const int MAX_BUFFER_SIZE = 4096; // pongo esto porque me lo sugiere
-//                                       // el cpplint
+static const int MAX_BUFFER_SIZE = 4096;
 
 /* members functions */
 void rope_create(rope_t* self) {
-    rope_node_t *root = (rope_node_t *) malloc(sizeof (rope_node_t));
+    rope_node_t *root = (rope_node_t*) malloc(sizeof (rope_node_t));
 
     rope_node_initialize(root);
     self->root = root;
@@ -31,11 +29,11 @@ splitted_rope_t *split(rope_node_t* node, int index) {
         if (node->left_child == NULL) {
             assert(index >= 0 && index <= node->weight);
             if (index == 0) {
-                pair->left_tree = NULL;
-                pair->right_tree = node;
+                pair->left = NULL;
+                pair->right = node;
             } else if (index == node->weight) {
-                pair->left_tree = node;
-                pair->right_tree = NULL;
+                pair->left = node;
+                pair->right = NULL;
             } else {
                 int str_lenght = node->weight;
 
@@ -47,41 +45,50 @@ splitted_rope_t *split(rope_node_t* node, int index) {
                 strncpy(right_str, node->word + index, str_lenght - index);
                 right_str[str_lenght - index] = '\0';
 
-                pair->left_tree = (rope_node_t*) malloc(sizeof (rope_node_t));
-                initialize_empty_node(pair->left_tree);
+                pair->left = (rope_node_t*) malloc(sizeof (rope_node_t));
 
-                pair->right_tree = (rope_node_t*) malloc(sizeof (rope_node_t));
-                initialize_empty_node(pair->right_tree);
+                rope_node_initialize(pair->left);
 
-                rope_node_initialize_leaf(pair->left_tree, left_str);
-                rope_node_initialize_leaf(pair->right_tree, right_str);
+                pair->right = (rope_node_t*) malloc(sizeof (rope_node_t));
+
+                rope_node_initialize(pair->right);
+
+                rope_node_initialize_leaf(pair->left, left_str);
+                rope_node_initialize_leaf(pair->right, right_str);
+
+                rope_node_destroy(node); // la hoja vieja la boleteamos
             }
         } else if (index == node->weight) {
-            pair->left_tree = node->left_child;
-            pair->right_tree = node->right_child;
+            pair->left = node->left_child;
+            pair->right = node->right_child;
+            rope_node_destroy(node);
         } else if (index < node->weight) {
             splitted_rope_t *tmp = split(node->left_child, index);
 
-            pair->left_tree = tmp->left_tree;
+            pair->left = tmp->left;
 
-            pair->right_tree = (rope_node_t*) malloc(sizeof (rope_node_t));
+            pair->right = (rope_node_t*) malloc(sizeof (rope_node_t));
+            rope_node_initialize(pair->right);
 
-            initialize_empty_node(pair->right_tree);
+            join(pair->right, tmp->right, node->right_child);
 
-            join(pair->right_tree, tmp->right_tree, node->right_child);
+            rope_node_destroy(node);
 
             free(tmp);
         } else {
             splitted_rope_t *tmp =
                     split(node->right_child, index - node->weight);
 
-            pair->left_tree = (rope_node_t*) malloc(sizeof (rope_node_t));
+            pair->left = (rope_node_t*) malloc(sizeof (rope_node_t));
 
-            initialize_empty_node(pair->left_tree);
+            rope_node_initialize(pair->left);
 
-            pair->right_tree = tmp->right_tree;
+            pair->right = tmp->right;
 
-            join(pair->left_tree, node->left_child, tmp->left_tree);
+            join(pair->left, node->left_child, tmp->left);
+
+            rope_node_destroy(node);
+            //node = NULL;
 
             free(tmp);
         }
@@ -106,6 +113,7 @@ static int calculate_weight(rope_node_t *subtree) {
         if (subtree->word != NULL) {
             current_weight += subtree->weight;
         } else {
+
             subtree->weight = current_weight;
         }
 
@@ -116,6 +124,7 @@ static int calculate_weight(rope_node_t *subtree) {
 }
 
 void insert(rope_t *self, int pos, char *str) {
+
     int pos2 = calculate_positive_position(pos, self->root->weight);
 
     assert(pos2 <= self->root->weight);
@@ -124,47 +133,57 @@ void insert(rope_t *self, int pos, char *str) {
 }
 
 static void insert2(rope_t *self, int pos, char *str) {
+
+    printf("Nodos antes de insert de '%s' en pos %d...", str, pos);
+    print(self);
+
     if (is_empty(self)) {
         rope_node_t *lc = (rope_node_t*) malloc(sizeof (rope_node_t));
-        initialize_empty_node(lc);
+
         rope_node_initialize_leaf(lc, str);
 
         self->root->left_child = lc;
         self->root->weight = self->root->left_child->weight;
     } else {
         splitted_rope_t *sr = split(self->root, pos);
+
         rope_node_t *new_leaf = (rope_node_t*) malloc(sizeof (rope_node_t));
-        initialize_empty_node(new_leaf);
-        rope_node_t *new_root = (rope_node_t*) malloc(sizeof (rope_node_t));
-
-        rope_node_initialize(new_root);
-
         rope_node_initialize_leaf(new_leaf, str);
 
-        if (sr->right_tree == NULL) {
-            free(sr->right_tree);
-            join(new_root, sr->left_tree, new_leaf);
-            join(self->root, new_root, NULL);
-        } else if (sr->left_tree == NULL) {
-            free(sr->left_tree);
-            join(new_root, new_leaf, sr->right_tree);
-            join(self->root, new_root, NULL);
+        rope_node_t *join_root = (rope_node_t*) malloc(sizeof (rope_node_t));
+        rope_node_initialize(join_root);
+
+        rope_node_t *new_root = (rope_node_t*) malloc(sizeof (rope_node_t));
+        rope_node_initialize(new_root);
+
+        if (sr->right == NULL) {
+            join(join_root, sr->left, new_leaf);
+            join(new_root, join_root, NULL);
+        } else if (sr->left == NULL) {
+            join(join_root, new_leaf, sr->right);
+            join(new_root, join_root, NULL);
         } else {
-            join(new_root, sr->left_tree, new_leaf);
+            join(join_root, sr->left, new_leaf);
 
-            rope_node_t *new_root2 =
+            rope_node_t *join_root2 =
                     (rope_node_t*) malloc(sizeof (rope_node_t));
-            initialize_empty_node(new_root2);
+            rope_node_initialize(join_root2);
 
-            join(new_root2, new_root, sr->right_tree);
-            join(self->root, new_root2, NULL);
+            join(join_root2, join_root, sr->right);
+            join(new_root, join_root2, NULL);
         }
+
+        self->root = new_root;
 
         free(sr);
     }
+
+    printf("Nodos después de insert de '%s' en pos %d...", str, pos);
+    print(self);
 }
 
 void delete(rope_t *self, int start, int end) {
+
     int start2 = calculate_positive_position(start, self->root->weight);
     int end2 = calculate_positive_position(end, self->root->weight);
 
@@ -176,34 +195,45 @@ void delete(rope_t *self, int start, int end) {
 static void delete2(rope_t *tree, int start, int end) {
     assert(start >= 0 && end <= tree->root->weight);
 
+    puts("Nodos antes de delete...");
+    print(tree);
+
     if (!is_empty(tree)) {
         splitted_rope_t *sr1 = split(tree->root, start);
-        splitted_rope_t *sr2 = split(sr1->right_tree, end - start);
+        splitted_rope_t *sr2 = split(sr1->right, end - start);
 
-        if (sr1->left_tree == NULL) {
-            free(sr1->left_tree);
-            join(tree->root, sr2->right_tree, NULL);
-        } else if (sr2->right_tree == NULL) {
-            free(sr2->right_tree);
-            join(tree->root, sr1->left_tree, NULL);
+        // en las operaciones previas se destruye el root
+        tree->root = (rope_node_t*) malloc(sizeof (rope_node_t));
+        puts("nuevo root...");
+        rope_node_initialize(tree->root);
+
+        if (sr1->left == NULL) {
+            join(tree->root, sr2->right, NULL);
+        } else if (sr2->right == NULL) {
+            join(tree->root, sr1->left, NULL);
         } else {
+
             rope_node_t *new_root = (rope_node_t*) malloc(sizeof (rope_node_t));
-            join(new_root, sr1->left_tree, sr2->right_tree);
+
+            rope_node_initialize(new_root);
+            join(new_root, sr1->left, sr2->right);
             join(tree->root, new_root, NULL);
         }
 
-        rope_destroy_subtree(sr2->left_tree);
+        rope_destroy_subtree(sr2->left);
         free(sr2);
         free(sr1);
     }
 }
 
 void append(rope_t *tree, char *word) {
+
     insert(tree, tree->root->weight, word);
 }
 
 void print(rope_t *tree) {
     if (tree != NULL) {
+
         print2(tree->root);
         puts("");
     }
@@ -217,19 +247,13 @@ static void print2(rope_node_t *self) {
     print2(self->left_child);
     print2(self->right_child);
 
-    if (self->word != NULL) {
-        printf("%s", self->word);
-    }
-}
-
-static void initialize_empty_node(rope_node_t *node) {
-    node->left_child = NULL;
-    node->right_child = NULL;
-    node->word = NULL;
-    node->weight = 0;
+    //if (self->word != NULL) {
+    printf("%d\n", self->id);
+    //}
 }
 
 int is_empty(rope_t* self) {
+
     return self->root != NULL
             && self->root->left_child == NULL
             && self->root->left_child == NULL;

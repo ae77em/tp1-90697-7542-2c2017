@@ -1,14 +1,20 @@
 #include "rope_node.h"
 
+int id_nodo = 0;
+
 void rope_node_create(rope_node_t *self) {
     rope_node_initialize(self);
 }
 
 void rope_node_destroy(rope_node_t *self) {
-    if (self->word != NULL) {
-        free(self->word);
+    if (self != NULL) {
+        if (self->word != NULL) {
+            free(self->word);
+        }
+        printf("Se borra nodo\t%d\n", self->id);
+        free(self);
+        self = NULL;
     }
-    free(self);
 }
 
 void rope_destroy_subtree(rope_node_t* self) {
@@ -17,6 +23,7 @@ void rope_destroy_subtree(rope_node_t* self) {
         rope_destroy_subtree(self->right_child);
 
         rope_node_destroy(self);
+
     }
 }
 
@@ -25,17 +32,17 @@ void rope_node_initialize(rope_node_t* self) {
     self->right_child = NULL;
     self->word = NULL;
     self->weight = 0;
+    self->id = id_nodo;
+
+    id_nodo++;
+
+    printf("Se crea nodo\t%d\n", self->id);
 }
 
 void rope_node_initialize_leaf(rope_node_t* self, char *str) {
+    rope_node_initialize(self);
     size_t lenght_of_word = strlen(str);
     self->word = (char*) malloc(sizeof (char) * (lenght_of_word + 1));
     strncpy(self->word, str, lenght_of_word + 1);
     self->weight = lenght_of_word;
-}
-
-void rope_node_create_leaf(rope_node_t *self, char *str) {
-    self = (rope_node_t*) malloc(sizeof (rope_node_t));
-    rope_node_create(self);
-    rope_node_initialize_leaf(self, str);
 }

@@ -4,8 +4,8 @@
 #include "rope_node.h"
 
 typedef struct {
-    rope_node_t* left_tree;
-    rope_node_t* right_tree;
+    rope_node_t* left;
+    rope_node_t* right;
 } splitted_rope_t;
 
 splitted_rope_t* splitted_rope_create();
