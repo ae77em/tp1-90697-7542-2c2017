@@ -33,23 +33,24 @@ int server_main(int argc, char *argv[]) {
     }
 
     rope_t *rope = (rope_t*) malloc(sizeof (rope_t));
-    rope_create(rope);
-
     socket_t * server_socket = (socket_t*) malloc(sizeof (socket_t));
     socket_t * client_socket = (socket_t*) malloc(sizeof (socket_t));
 
-    //client_socket = NULL;
-
+    rope_create(rope);
     socket_create(server_socket);
     socket_create(client_socket);
 
     if (socket_bind_and_listen(server_socket, port) != EXIT_SUCCESS) {
+        rope_destroy(rope);
         socket_destroy(server_socket);
+        socket_destroy(client_socket);
         return EXIT_FAILURE;
     }
 
     if (socket_accept(server_socket, client_socket) != EXIT_SUCCESS) {
+        rope_destroy(rope);
         socket_destroy(server_socket);
+        socket_destroy(client_socket);
         return EXIT_FAILURE;
     }
 
@@ -201,16 +202,13 @@ int server_main(int argc, char *argv[]) {
         /*****************************************************/
     }
 
+    free(temp_buffer);
+
+    rope_destroy(rope);
     socket_shutdown(server_socket);
     socket_destroy(server_socket);
     socket_shutdown(client_socket);
     socket_destroy(client_socket);
-
-    free(temp_buffer);
-    free(client_socket);
-    free(server_socket);
-
-    //rope_destroy(rope);
 
     if (received >= 0) {
         return EXIT_SUCCESS;

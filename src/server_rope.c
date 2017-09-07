@@ -17,8 +17,7 @@ static const int MAX_BUFFER_SIZE = 4096;
 
 /* members functions */
 void rope_create(rope_t* self) {
-    rope_node_t *root = (rope_node_t *) malloc(sizeof (rope_node_t));
-
+    rope_node_t *root = (rope_node_t*) malloc(sizeof (rope_node_t));
     rope_node_initialize(root);
     self->root = root;
 }
@@ -120,7 +119,6 @@ static int calculate_weight(rope_node_t *subtree) {
 
 void insert(rope_t *self, int pos, char *str) {
     int pos2 = calculate_positive_position(pos, self->root->weight);
-
     assert(pos2 <= self->root->weight);
 
     insert2(self, pos2, str);
@@ -136,6 +134,7 @@ static void insert2(rope_t *self, int pos, char *str) {
         self->root->weight = self->root->left_child->weight;
     } else {
         splitted_rope_t *sr = split(self->root, pos);
+
         rope_node_t *new_leaf = (rope_node_t*) malloc(sizeof (rope_node_t));
         rope_node_initialize_leaf(new_leaf, str);
 
@@ -143,7 +142,6 @@ static void insert2(rope_t *self, int pos, char *str) {
         rope_node_initialize(join_root);
 
         rope_node_t *new_root = (rope_node_t*) malloc(sizeof (rope_node_t));
-
         rope_node_initialize(new_root);
 
         if (sr->right == NULL) {
