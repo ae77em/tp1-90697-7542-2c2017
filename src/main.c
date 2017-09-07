@@ -93,6 +93,11 @@ int main(int argc, char *argv[]) {
         input = stdin;
     }
 
+    if (input == NULL) {
+        perror("Error al abrir el archivo de entrada: ");
+        return EXIT_FAILURE;
+    }
+
     int readcounter = 0;
 
     while (fgets(line, sizeof (line) - 1, input) != NULL) {
@@ -133,7 +138,7 @@ int main(int argc, char *argv[]) {
                 }
             } else if (strcmp(cmd, CMD_PRINT) == 0) {
                 if (readcounter == 1) {
-                    //print(tree);
+                    print(tree);
                 } else {
                     print_invalid_param_msg(CMD_PRINT, CMD_FMT_PRINT);
                 }

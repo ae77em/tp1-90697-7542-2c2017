@@ -11,7 +11,6 @@ void rope_node_destroy(rope_node_t *self) {
         if (self->word != NULL) {
             free(self->word);
         }
-        printf("Se borra nodo\t%d\n", self->id);
         free(self);
         self = NULL;
     }
@@ -23,7 +22,6 @@ void rope_destroy_subtree(rope_node_t* self) {
         rope_destroy_subtree(self->right_child);
 
         rope_node_destroy(self);
-
     }
 }
 
@@ -32,11 +30,8 @@ void rope_node_initialize(rope_node_t* self) {
     self->right_child = NULL;
     self->word = NULL;
     self->weight = 0;
-    self->id = id_nodo;
 
     id_nodo++;
-
-    printf("Se crea nodo\t%d\n", self->id);
 }
 
 void rope_node_initialize_leaf(rope_node_t* self, char *str) {
