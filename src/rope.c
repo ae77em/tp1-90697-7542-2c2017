@@ -1,9 +1,15 @@
 #include "rope.h"
+//#include "common_socket.h"
+//#include "common_structs.h"
+
+char *SPACE = " ";
+char *NEWLINE = "\n";
 
 /* helpers functions declaration */
 static int calculate_weight(rope_node_t *subtree);
 static int calculate_positive_position(int pos, int last_pos);
 static void print2(rope_node_t *subtree);
+static void sprint2(rope_node_t *subtree, char *dest);
 static void insert2(rope_t *self, int pos, char *str);
 static void delete2(rope_t *tree, int start, int end);
 
@@ -199,8 +205,12 @@ static void delete2(rope_t *tree, int start, int end) {
     }
 }
 
-void append(rope_t *tree, char *word) {
-    insert(tree, tree->root->weight, word);
+void space(rope_t *tree, int pos) {
+    insert(tree, pos, SPACE);
+}
+
+void newline(rope_t *tree, int pos) {
+    insert(tree, pos, NEWLINE);
 }
 
 void print(rope_t *tree) {
@@ -220,6 +230,26 @@ static void print2(rope_node_t *self) {
 
     if (self->word != NULL) {
         printf("%s", self->word);
+    }
+}
+
+void sprint(rope_t *tree, char *dest) {
+    if (tree != NULL) {
+        sprint2(tree->root, dest);
+    }
+    strncat(dest, "\n", 1);
+}
+
+static void sprint2(rope_node_t *self, char *dest) {
+    if (self == NULL) {
+        return;
+    }
+
+    sprint2(self->left_child, dest);
+    sprint2(self->right_child, dest);
+
+    if (self->word != NULL) {
+        strncat(dest, self->word, self->weight);
     }
 }
 

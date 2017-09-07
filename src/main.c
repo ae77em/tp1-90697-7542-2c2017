@@ -33,15 +33,15 @@ void test_rope() {
     rope_t *tree = (rope_t *) malloc(sizeof (rope_t));
     rope_create(tree);
 
-    append(tree, "Hola ");
+    insert(tree, 0, "Hola ");
     print(tree);
     insert(tree, 0, "*");
     print(tree);
-    append(tree, "que tal");
+    insert(tree, 0, "que tal");
     print(tree);
     insert(tree, 5, "Pepo, ");
     print(tree);
-    append(tree, "?");
+    insert(tree, 0, "?");
     print(tree);
     insert(tree, 3, "caca");
     print(tree);
@@ -50,7 +50,7 @@ void test_rope() {
     print(tree);
     insert(tree, 0, "ooloo");
     print(tree);
-    append(tree, " Bien, pero estresado :(");
+    insert(tree, 0, " Bien, pero estresado :(");
     print(tree);
 
     delete(tree, 2, 3);

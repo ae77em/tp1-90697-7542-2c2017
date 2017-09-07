@@ -1,7 +1,5 @@
 #include "rope_node.h"
 
-int id_nodo = 0;
-
 void rope_node_create(rope_node_t *self) {
     rope_node_initialize(self);
 }
@@ -30,8 +28,6 @@ void rope_node_initialize(rope_node_t* self) {
     self->right_child = NULL;
     self->word = NULL;
     self->weight = 0;
-
-    id_nodo++;
 }
 
 void rope_node_initialize_leaf(rope_node_t* self, char *str) {

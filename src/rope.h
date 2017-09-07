@@ -5,8 +5,10 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 #include "rope_node.h"
 #include "splitted_rope.h"
+//#include "common_socket.h"
 
 typedef struct rope_t {
   rope_node_t *root;
@@ -21,8 +23,10 @@ void join(rope_node_t *p, rope_node_t* l, rope_node_t* r);
 void insert(rope_t *tree, int pos, char *word);
 void delete(rope_t *tree, int start, int end);
 
-void append(rope_t *tree, char *word);
+void space(rope_t *tree, int pos);
+void newline(rope_t *tree, int pos);
 void print(rope_t *self);
+void sprint(rope_t *self, char *dest);
 
 /* auxiliar operations */
 int is_empty(rope_t *self);
