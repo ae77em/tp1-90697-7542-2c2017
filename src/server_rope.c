@@ -171,6 +171,9 @@ void delete(rope_t *self, int start, int end) {
     int start2 = calculate_positive_position(start, self->root->weight);
     int end2 = calculate_positive_position(end, self->root->weight);
 
+    if (!(start2 <= end2 && end2 <= self->root->weight)) {
+        puts("se rompio todo...");
+    }
     assert(start2 <= end2 && end2 <= self->root->weight);
 
     delete2(self, start2, end2);
@@ -237,7 +240,7 @@ void sprint(rope_t *tree, char *dest) {
     if (tree != NULL) {
         sprint2(tree->root, dest);
     }
-    strncat(dest, "\n", 1);
+    strncat(dest, "\n\0", 2);
 }
 
 static void sprint2(rope_node_t *self, char *dest) {

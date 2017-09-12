@@ -17,5 +17,6 @@ int socket_accept(socket_t *self, socket_t* accepted_socket);
 int socket_send(socket_t *self, const char* buffer, size_t length);
 int socket_receive(socket_t *self, char* buffer, size_t length);
 void socket_shutdown(socket_t *self);
+void socket_shutdown_send(socket_t *self);
 
 #endif

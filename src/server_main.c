@@ -54,26 +54,44 @@ int server_main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    char *temp_buffer = (char*) malloc(sizeof (char));
+    char *send_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    memset(send_buffer, 0, MAX_DATA_BUFFER);
+    char *text = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    memset(text, 0, MAX_DATA_BUFFER);
+    char *sprint_result = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    memset(sprint_result, 0, MAX_DATA_BUFFER);
+    char *recv_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    memset(recv_buffer, 0, MAX_DATA_BUFFER);
+
+    char *aux_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
     int received;
     int lines_printed = 0;
 
-    received = socket_receive(client_socket, temp_buffer, MAX_RECV_BUFFER);
+    memset(aux_buffer, 0, MAX_DATA_BUFFER);
+
+    received = socket_receive(client_socket, aux_buffer, MAX_DATA_BUFFER);
 
     if (received > 0) {
+
+        /********/
+        int print_counter = 0;
+        /********/
         int ptr_shift = 0;
         int opcode;
         int opcode_size = sizeof (int);
         int pos;
         int pos_size = sizeof (int);
+        unsigned short size;
+        unsigned short size_size = sizeof (unsigned short);
+        int to;
+        int to_size = sizeof (int);
+        int sprint_size;
 
-        char send_buffer[MAX_SEND_BUFFER] = {0};
-        char recv_buffer[MAX_RECV_BUFFER];
-        memcpy(recv_buffer, temp_buffer, received);
+        memcpy(recv_buffer, aux_buffer, received);
 
         while (ptr_shift < received) { // EOT
-            opcode = 7; // lo seteo con una op invalida
-            pos = -9999;
+            opcode = 0; // lo seteo con una op invalida
+            pos = 0;
 
             memcpy(
                     (void*) &opcode,
@@ -95,8 +113,6 @@ int server_main(int argc, char *argv[]) {
 
                     ptr_shift += pos_size;
 
-                    unsigned short size;
-                    unsigned short size_size = sizeof (unsigned short);
                     memcpy(
                             (void*) &size,
                             (void*) (recv_buffer + ptr_shift),
@@ -105,7 +121,7 @@ int server_main(int argc, char *argv[]) {
                     size = ntohs(size);
 
                     ptr_shift += size_size;
-                    char text[MAX_RECV_BUFFER];
+
                     strncpy(text, recv_buffer + ptr_shift, size);
                     text[size] = '\0';
                     ptr_shift += size;
@@ -124,9 +140,6 @@ int server_main(int argc, char *argv[]) {
                     pos = ntohl(pos);
 
                     ptr_shift += pos_size;
-
-                    int to;
-                    int to_size = sizeof (int);
 
                     memcpy(
                             (void*) &to,
@@ -166,27 +179,30 @@ int server_main(int argc, char *argv[]) {
                     break;
 
                 case OPCODE_PRINT:
+                    print_counter++;
                     ptr_shift += opcode_size;
-                    char sprint_result[MAX_SEND_BUFFER] = {0};
-                    print(rope);
+                    memset(sprint_result, 0, MAX_DATA_BUFFER);
                     sprint(rope, sprint_result);
-                    printf("%s", sprint_result);
                     lines_printed++;
+                    sprint_size = strlen(sprint_result);
                     strncat(
                             send_buffer,
                             sprint_result,
-                            rope->root->weight + lines_printed);
+                            sprint_size);
+
                     break;
 
                 default:
+                    printf("%d", print_counter);
                     puts("Operación inexistente.");
+                    ptr_shift = received;
             }
         }
 
         /*********** MANDO LA RTA TODA JUNTA ****************/
         int size_struct = sizeof (short);
         int size_string = strlen(send_buffer);
-        char buffer[MAX_SEND_BUFFER];
+        char buffer[MAX_DATA_BUFFER];
 
         struct response_command_t sc = {
             .size = htons(size_string)
@@ -200,9 +216,17 @@ int server_main(int argc, char *argv[]) {
 
         socket_send(client_socket, buffer, size_struct + size_string);
         /*****************************************************/
+
+        //free(text);
+        //free(send_buffer);
     }
 
-    free(temp_buffer);
+    free(send_buffer);
+    free(text);
+    free(sprint_result);
+    free(recv_buffer);
+
+    free(aux_buffer);
 
     rope_destroy(rope);
     socket_shutdown(server_socket);

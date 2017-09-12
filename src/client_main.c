@@ -133,26 +133,28 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
         }
     }
 
-    char response_buffer[MAX_RECV_BUFFER] = {0};
+    socket_shutdown_send(client_socket);
+
+    char *response_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
     int shift = sizeof (short);
 
-    int recv = socket_receive(client_socket, response_buffer, MAX_RECV_BUFFER);
-
-    socket_shutdown(client_socket);
-    socket_destroy(client_socket);
+    int recv = socket_receive(client_socket, response_buffer, MAX_DATA_BUFFER);
 
     response_buffer[recv] = '\0';
 
     if (recv > shift) {
         printf("%s", response_buffer + shift);
     }
+
+    socket_shutdown(client_socket);
+    socket_destroy(client_socket);
 }
 
 static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
     int size_struct = sizeof (struct insert_command_t);
     size_struct -= sizeof (char*);
     int size_string = strlen(scnd_param);
-    char buffer[MAX_SEND_BUFFER];
+    char buffer[MAX_DATA_BUFFER];
 
     struct insert_command_t sc = {
         .opcode = htonl(OPCODE_INSERT),
@@ -169,7 +171,7 @@ static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
 
 static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
     int size = sizeof (struct delete_command_t);
-    char buffer[MAX_SEND_BUFFER];
+    char buffer[MAX_DATA_BUFFER];
 
     struct delete_command_t sc = {
         .opcode = htonl(OPCODE_DELETE),
@@ -184,7 +186,7 @@ static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
 
 static void send_space(socket_t *sock, int fst_param) {
     int size = sizeof (struct space_command_t);
-    char buffer[MAX_RECV_BUFFER];
+    char buffer[MAX_DATA_BUFFER];
 
     struct space_command_t sc = {
         .opcode = htonl(OPCODE_SPACE),
@@ -198,7 +200,7 @@ static void send_space(socket_t *sock, int fst_param) {
 
 static void send_newline(socket_t *sock, int fst_param) {
     int size = sizeof (struct newline_command_t);
-    char buffer[MAX_SEND_BUFFER];
+    char buffer[MAX_DATA_BUFFER];
 
     struct newline_command_t nc = {
         .opcode = htonl(OPCODE_NEWLINE),
@@ -212,7 +214,7 @@ static void send_newline(socket_t *sock, int fst_param) {
 
 static void send_print(socket_t * sock) {
     int size = sizeof (struct print_command_t);
-    char buffer[MAX_SEND_BUFFER];
+    char buffer[MAX_DATA_BUFFER];
 
     struct print_command_t pc = {.opcode = htonl(OPCODE_PRINT)};
 

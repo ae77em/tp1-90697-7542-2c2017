@@ -122,6 +122,8 @@ int socket_accept(socket_t *self, socket_t* accepted_socket) {
     unsigned int clilen;
     struct sockaddr_in cli_addr;
 
+    memset(&cli_addr, 0, sizeof (struct sockaddr));
+
     newsockfd = accept(self->socket, (struct sockaddr *) &cli_addr, &clilen);
 
     if (newsockfd < 0) {
@@ -139,22 +141,22 @@ int socket_accept(socket_t *self, socket_t* accepted_socket) {
 int socket_send(socket_t *self, const char* buffer, size_t length) {
     // no pude hacer andar ese loop :(
     int sent = 0;
-    //    int s = 0;
-    //    bool is_valid_socket = true;
-    //
-    //    while (sent < length && is_valid_socket) {
-    sent = send(self->socket, &buffer[0], length, MSG_NOSIGNAL);
+    int s = 0;
+    bool is_valid_socket = true;
 
-    //        if (s == 0) {
-    //            is_valid_socket = false;
-    //            sent = ERR_SOCKET_CLOSED_SEND;
-    //        } else if (s < 0) {
-    //            is_valid_socket = false;
-    //            sent = ERR_SOCKET_SEND;
-    //        } else {
-    //            sent += s;
-    //        }
-    //    }
+    while (sent < length && is_valid_socket) {
+        s = send(self->socket, &buffer[0], length, MSG_NOSIGNAL);
+
+        if (s == 0) {
+            is_valid_socket = false;
+            sent = ERR_SOCKET_CLOSED_SEND;
+        } else if (s < 0) {
+            is_valid_socket = false;
+            sent = ERR_SOCKET_SEND;
+        } else {
+            sent += s;
+        }
+    }
 
     return sent;
 }
@@ -164,22 +166,22 @@ int socket_send(socket_t *self, const char* buffer, size_t length) {
  */
 int socket_receive(socket_t *self, char* buffer, size_t length) {
     int received = 0;
-    //    int r = 0;
-    //    bool is_valid_socket = true;
-    //    bool has_ended = false;
-    //
-    //    while (received < length && is_valid_socket && !has_ended) {
-    received = recv(self->socket, &buffer[0], length, MSG_NOSIGNAL);
+    int r = 0;
+    bool is_valid_socket = true;
+    bool has_ended = false;
 
-    //        if (r == 0) {
-    //            has_ended = true;
-    //        } else if (r < 0) {
-    //            is_valid_socket = false;
-    //            received = ERR_SOCKET_RECEIVE;
-    //        } else {
-    //            received += r;
-    //        }
-    //    }
+    while (received < length && is_valid_socket && !has_ended) {
+        r = recv(self->socket, &buffer[0], length, MSG_NOSIGNAL);
+
+        if (r == 0) {
+            has_ended = true;
+        } else if (r < 0) {
+            is_valid_socket = false;
+            received = ERR_SOCKET_RECEIVE;
+        } else {
+            received += r;
+        }
+    }
 
     return received;
 }
@@ -189,4 +191,8 @@ int socket_receive(socket_t *self, char* buffer, size_t length) {
  */
 void socket_shutdown(socket_t *self) {
     shutdown(self->socket, SHUT_RDWR);
+}
+
+void socket_shutdown_send(socket_t *self) {
+    shutdown(self->socket, SHUT_WR);
 }

@@ -10,8 +10,7 @@
 #define OPCODE_NEWLINE      4
 #define OPCODE_PRINT        5
 
-#define MAX_SEND_BUFFER 2048
-#define MAX_RECV_BUFFER 2048
+#define MAX_DATA_BUFFER 2048
 
 struct insert_command_t {
     int opcode;
