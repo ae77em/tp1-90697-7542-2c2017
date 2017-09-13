@@ -14,7 +14,6 @@
  * shutdown()
  * 7. Cerrar todos los sockets debidamente con close() al finalizar.
  */
-
 int server_main(int argc, char *argv[]) {
     if (argc != 3) {
         puts("La cantidad de parámetros es incorrecta.");
@@ -56,179 +55,160 @@ int server_main(int argc, char *argv[]) {
 
     char *send_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
     memset(send_buffer, 0, MAX_DATA_BUFFER);
-    char *text = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    char text[MAX_DATA_BUFFER];
     memset(text, 0, MAX_DATA_BUFFER);
-    char *sprint_result = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    char sprint_result[MAX_DATA_BUFFER];
     memset(sprint_result, 0, MAX_DATA_BUFFER);
-    char *recv_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    char recv_buffer[MAX_DATA_BUFFER];
     memset(recv_buffer, 0, MAX_DATA_BUFFER);
 
-    char *aux_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
+    int msg_length = 0;
     int received;
-    int lines_printed = 0;
+    bool the_end_is_here = false;
+    int ptr_shift = 0;
+    int opcode = -1;
+    int pos;
+    unsigned short size;
+    int to;
+    unsigned short sprint_size;
+    unsigned short response_size;
 
-    memset(aux_buffer, 0, MAX_DATA_BUFFER);
+    /* opero recibiendo de a una operación por vez, para evitar los overflows */
+    while (!the_end_is_here && (received = socket_receive(client_socket, (char*) &msg_length, _SIZE_OF_UINT32_)) > 0) {
 
-    received = socket_receive(client_socket, aux_buffer, MAX_DATA_BUFFER);
+        msg_length = ntohl(msg_length);
 
-    if (received > 0) {
+        received = socket_receive(client_socket, recv_buffer, msg_length);
 
-        /********/
-        int print_counter = 0;
-        /********/
-        int ptr_shift = 0;
-        int opcode;
-        int opcode_size = sizeof (int);
-        int pos;
-        int pos_size = sizeof (int);
-        unsigned short size;
-        unsigned short size_size = sizeof (unsigned short);
-        int to;
-        int to_size = sizeof (int);
-        int sprint_size;
+        the_end_is_here = (received <= 0);
+        if (!the_end_is_here) {
 
-        memcpy(recv_buffer, aux_buffer, received);
-
-        while (ptr_shift < received) { // EOT
-            opcode = 0; // lo seteo con una op invalida
+            ptr_shift = 0;
+            opcode = 0;
             pos = 0;
+            size = 0;
+            to = 0;
+            sprint_size = 0;
 
-            memcpy(
-                    (void*) &opcode,
-                    (void*) (recv_buffer + ptr_shift),
-                    opcode_size);
+            while (ptr_shift < received) { // EOT
 
-            opcode = ntohl(opcode);
+                memcpy(
+                        (void*) &opcode,
+                        (void*) (recv_buffer + ptr_shift),
+                        _SIZE_OF_UINT32_);
 
-            switch (opcode) {
-                case OPCODE_INSERT:
-                    ptr_shift += opcode_size;
+                opcode = ntohl(opcode);
 
-                    memcpy(
-                            (void*) &pos,
-                            (void*) (recv_buffer + ptr_shift),
-                            pos_size);
+                switch (opcode) {
+                    case OPCODE_INSERT:
+                        ptr_shift += _SIZE_OF_UINT32_;
 
-                    pos = ntohl(pos);
+                        memcpy(
+                                (void*) &pos,
+                                (void*) (recv_buffer + ptr_shift),
+                                _SIZE_OF_UINT32_);
 
-                    ptr_shift += pos_size;
+                        pos = ntohl(pos);
 
-                    memcpy(
-                            (void*) &size,
-                            (void*) (recv_buffer + ptr_shift),
-                            size_size);
+                        ptr_shift += _SIZE_OF_UINT32_;
 
-                    size = ntohs(size);
+                        memcpy(
+                                (void*) &size,
+                                (void*) (recv_buffer + ptr_shift),
+                                _SIZE_OF_SHORT_);
 
-                    ptr_shift += size_size;
+                        size = ntohs(size);
 
-                    strncpy(text, recv_buffer + ptr_shift, size);
-                    text[size] = '\0';
-                    ptr_shift += size;
+                        ptr_shift += _SIZE_OF_SHORT_;
 
-                    insert(rope, pos, text);
+                        strncpy(text, recv_buffer + ptr_shift, size);
+                        text[size] = '\0';
+                        ptr_shift += size;
 
-                    break;
-                case OPCODE_DELETE:
-                    ptr_shift += opcode_size;
+                        rope_insert(rope, pos, text);
 
-                    memcpy(
-                            (void*) &pos,
-                            (void*) (recv_buffer + ptr_shift),
-                            pos_size);
+                        break;
+                    case OPCODE_DELETE:
+                        ptr_shift += _SIZE_OF_UINT32_;
 
-                    pos = ntohl(pos);
+                        memcpy(
+                                (void*) &pos,
+                                (void*) (recv_buffer + ptr_shift),
+                                _SIZE_OF_UINT32_);
 
-                    ptr_shift += pos_size;
+                        pos = ntohl(pos);
 
-                    memcpy(
-                            (void*) &to,
-                            (void*) (recv_buffer + ptr_shift),
-                            to_size);
+                        ptr_shift += _SIZE_OF_UINT32_;
 
-                    to = ntohl(to);
+                        memcpy(
+                                (void*) &to,
+                                (void*) (recv_buffer + ptr_shift),
+                                _SIZE_OF_UINT32_);
 
-                    ptr_shift += to_size;
-                    delete(rope, pos, to);
-                    break;
+                        to = ntohl(to);
 
-                case OPCODE_SPACE:
-                    ptr_shift += opcode_size;
-                    memcpy(
-                            (void*) &pos,
-                            (void*) (recv_buffer + ptr_shift),
-                            pos_size);
+                        ptr_shift += _SIZE_OF_UINT32_;
+                        rope_delete(rope, pos, to);
+                        break;
 
-                    pos = ntohl(pos);
+                    case OPCODE_SPACE:
+                        ptr_shift += _SIZE_OF_UINT32_;
+                        memcpy(
+                                (void*) &pos,
+                                (void*) (recv_buffer + ptr_shift),
+                                _SIZE_OF_UINT32_);
 
-                    ptr_shift += pos_size;
-                    space(rope, pos);
-                    break;
+                        pos = ntohl(pos);
 
-                case OPCODE_NEWLINE:
-                    ptr_shift += opcode_size;
-                    memcpy(
-                            (void*) &pos,
-                            (void*) (recv_buffer + ptr_shift),
-                            pos_size);
+                        ptr_shift += _SIZE_OF_UINT32_;
+                        rope_space(rope, pos);
+                        break;
 
-                    pos = ntohl(pos);
+                    case OPCODE_NEWLINE:
+                        ptr_shift += _SIZE_OF_UINT32_;
+                        memcpy(
+                                (void*) &pos,
+                                (void*) (recv_buffer + ptr_shift),
+                                _SIZE_OF_UINT32_);
 
-                    ptr_shift += pos_size;
-                    newline(rope, pos);
-                    break;
+                        pos = ntohl(pos);
 
-                case OPCODE_PRINT:
-                    print_counter++;
-                    ptr_shift += opcode_size;
-                    memset(sprint_result, 0, MAX_DATA_BUFFER);
-                    sprint(rope, sprint_result);
-                    lines_printed++;
-                    sprint_size = strlen(sprint_result);
-                    strncat(
-                            send_buffer,
-                            sprint_result,
-                            sprint_size);
+                        ptr_shift += _SIZE_OF_UINT32_;
+                        rope_newline(rope, pos);
+                        break;
 
-                    break;
+                    case OPCODE_PRINT:
+                        ptr_shift += _SIZE_OF_UINT32_;
+                        memset(sprint_result, 0, MAX_DATA_BUFFER);
+                        rope_sprint(rope, sprint_result);
+                        sprint_size = strlen(sprint_result);
+                        sprint_result[sprint_size] = '\0';
 
-                default:
-                    printf("%d", print_counter);
-                    puts("Operación inexistente.");
-                    ptr_shift = received;
+                        strncat(
+                                send_buffer,
+                                sprint_result,
+                                sprint_size);
+
+                        response_size = htons(sprint_size);
+                        socket_send(client_socket, (char*) &response_size, _SIZE_OF_SHORT_);
+                        socket_send(client_socket, send_buffer, sprint_size);
+
+                        break;
+
+                    default:
+                        puts("Operación inexistente.");
+                        ptr_shift = received;
+                }
+
+
             }
         }
-
-        /*********** MANDO LA RTA TODA JUNTA ****************/
-        int size_struct = sizeof (short);
-        int size_string = strlen(send_buffer);
-        char buffer[MAX_DATA_BUFFER];
-
-        struct response_command_t sc = {
-            .size = htons(size_string)
-        };
-
-        memcpy((void*) buffer, (void*) &sc, size_struct);
-        memcpy(
-                (void*) (buffer + size_struct),
-                (void*) send_buffer,
-                size_string);
-
-        socket_send(client_socket, buffer, size_struct + size_string);
-        /*****************************************************/
-
-        //free(text);
-        //free(send_buffer);
     }
 
     free(send_buffer);
-    free(text);
-    free(sprint_result);
-    free(recv_buffer);
-
-    free(aux_buffer);
-
     rope_destroy(rope);
+    free(rope);
+
     socket_shutdown(server_socket);
     socket_destroy(server_socket);
     socket_shutdown(client_socket);

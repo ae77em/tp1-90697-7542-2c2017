@@ -5,6 +5,7 @@
 #include "common_socket.h"
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
 
 int client_main(int argc, char *argv[]);
 

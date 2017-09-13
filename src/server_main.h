@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
 
 int server_main(int argc, char *argv[]);
 

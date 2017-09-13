@@ -119,12 +119,8 @@ int socket_accept(socket_t *self, socket_t* accepted_socket) {
     int status = EXIT_SUCCESS;
 
     unsigned int newsockfd;
-    unsigned int clilen;
-    struct sockaddr_in cli_addr;
 
-    memset(&cli_addr, 0, sizeof (struct sockaddr));
-
-    newsockfd = accept(self->socket, (struct sockaddr *) &cli_addr, &clilen);
+    newsockfd = accept(self->socket, NULL, NULL);
 
     if (newsockfd < 0) {
         status = ERR_SOCKET_ACCEPT;
@@ -139,13 +135,12 @@ int socket_accept(socket_t *self, socket_t* accepted_socket) {
  * Envía datos a través del socket
  */
 int socket_send(socket_t *self, const char* buffer, size_t length) {
-    // no pude hacer andar ese loop :(
     int sent = 0;
     int s = 0;
     bool is_valid_socket = true;
 
     while (sent < length && is_valid_socket) {
-        s = send(self->socket, &buffer[0], length, MSG_NOSIGNAL);
+        s = send(self->socket, &buffer[sent], length - sent, MSG_NOSIGNAL);
 
         if (s == 0) {
             is_valid_socket = false;
@@ -171,7 +166,8 @@ int socket_receive(socket_t *self, char* buffer, size_t length) {
     bool has_ended = false;
 
     while (received < length && is_valid_socket && !has_ended) {
-        r = recv(self->socket, &buffer[0], length, MSG_NOSIGNAL);
+
+        r = recv(self->socket, &buffer[received], length - received, MSG_NOSIGNAL);
 
         if (r == 0) {
             has_ended = true;

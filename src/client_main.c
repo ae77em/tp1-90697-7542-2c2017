@@ -135,15 +135,23 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
 
     socket_shutdown_send(client_socket);
 
-    char *response_buffer = (char*) malloc(sizeof (char)*MAX_DATA_BUFFER);
-    int shift = sizeof (short);
+    unsigned short msg_length = 0;
+    int recv = 0;
+    char response_buffer[MAX_DATA_BUFFER];
+    bool the_end_is_here = false;
 
-    int recv = socket_receive(client_socket, response_buffer, MAX_DATA_BUFFER);
+    while (!the_end_is_here && (recv = socket_receive(client_socket, (char*) &msg_length, _SIZE_OF_SHORT_)) > 0) {
+        msg_length = ntohs(msg_length);
 
-    response_buffer[recv] = '\0';
+        recv = socket_receive(client_socket, response_buffer, msg_length);
+        the_end_is_here = (recv <= 0);
 
-    if (recv > shift) {
-        printf("%s", response_buffer + shift);
+        if (!the_end_is_here) {
+            response_buffer[msg_length] = '\0';
+            puts(response_buffer);
+        } else {
+            puts("No se obtuvo la respuesta esperada del servidor.");
+        }
     }
 
     socket_shutdown(client_socket);
@@ -156,7 +164,10 @@ static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
     int size_string = strlen(scnd_param);
     char buffer[MAX_DATA_BUFFER];
 
+    int msg_lenght = size_struct + size_string;
+
     struct insert_command_t sc = {
+        .msg_lenght = htonl(msg_lenght - _SIZE_OF_UINT32_),
         .opcode = htonl(OPCODE_INSERT),
         .pos = htonl(fst_param),
         .size = htons(size_string)
@@ -165,61 +176,62 @@ static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
     memcpy((void*) buffer, (void*) &sc, size_struct);
     memcpy((void*) (buffer + size_struct), (void*) scnd_param, size_string);
 
-    int lenght = size_struct + size_string;
-    socket_send(sock, buffer, lenght);
+    socket_send(sock, buffer, msg_lenght);
 }
 
 static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
     int size = sizeof (struct delete_command_t);
-    char buffer[MAX_DATA_BUFFER];
+    char buffer[size];
 
     struct delete_command_t sc = {
+        .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
         .opcode = htonl(OPCODE_DELETE),
         .from = htonl(fst_param),
         .to = htonl(scnd_param)
     };
 
     memcpy((void*) buffer, (void*) &sc, size);
-
     socket_send(sock, buffer, size);
 }
 
 static void send_space(socket_t *sock, int fst_param) {
     int size = sizeof (struct space_command_t);
-    char buffer[MAX_DATA_BUFFER];
+    char buffer[size];
 
     struct space_command_t sc = {
+        .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
         .opcode = htonl(OPCODE_SPACE),
         .pos = htonl(fst_param)
     };
 
     memcpy((void*) buffer, (void*) &sc, size);
-
     socket_send(sock, buffer, size);
 }
 
 static void send_newline(socket_t *sock, int fst_param) {
     int size = sizeof (struct newline_command_t);
-    char buffer[MAX_DATA_BUFFER];
+    char buffer[size];
 
     struct newline_command_t nc = {
+        .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
         .opcode = htonl(OPCODE_NEWLINE),
         .pos = htonl(fst_param)
     };
 
     memcpy((void*) buffer, (void*) &nc, size);
-
     socket_send(sock, buffer, size);
 }
 
 static void send_print(socket_t * sock) {
     int size = sizeof (struct print_command_t);
-    char buffer[MAX_DATA_BUFFER];
+    char buffer[size];
 
-    struct print_command_t pc = {.opcode = htonl(OPCODE_PRINT)};
+    struct print_command_t pc = {
+        .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
+        .opcode = htonl(OPCODE_PRINT)
+    };
 
     memcpy((void*) buffer, (void*) &pc, size);
-
     socket_send(sock, buffer, size);
 }
 
