@@ -153,8 +153,6 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
         if (!the_end_is_here) {
             response_buffer[msg_length] = '\0';
             printf("%s", response_buffer);
-        } else {
-            puts("No se obtuvo la respuesta esperada del servidor.");
         }
     }
 

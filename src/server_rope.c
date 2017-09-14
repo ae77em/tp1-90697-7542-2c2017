@@ -239,7 +239,7 @@ void rope_sprint(rope_t *tree, char *dest) {
     if (tree != NULL) {
         sprint2(tree->root, dest);
     }
-    strncat(dest, "\n\0", 2);
+    strncat(dest, "\0", 1);
 }
 
 static void sprint2(rope_node_t *self, char *dest) {
