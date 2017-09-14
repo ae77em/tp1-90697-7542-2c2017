@@ -41,7 +41,6 @@ int socket_destroy(socket_t *self) {
     int status = EXIT_SUCCESS;
 
     status = close(self->socket);
-    free(self);
 
     return status;
 }
@@ -140,7 +139,10 @@ int socket_send(socket_t *self, const char* buffer, size_t length) {
     bool is_valid_socket = true;
 
     while (sent < length && is_valid_socket) {
-        s = send(self->socket, &buffer[sent], length - sent, MSG_NOSIGNAL);
+        s = send(self->socket,
+                &buffer[sent],
+                length - sent,
+                MSG_NOSIGNAL);
 
         if (s == 0) {
             is_valid_socket = false;
@@ -166,8 +168,10 @@ int socket_receive(socket_t *self, char* buffer, size_t length) {
     bool has_ended = false;
 
     while (received < length && is_valid_socket && !has_ended) {
-
-        r = recv(self->socket, &buffer[received], length - received, MSG_NOSIGNAL);
+        r = recv(self->socket,
+                &buffer[received],
+                length - received,
+                MSG_NOSIGNAL);
 
         if (r == 0) {
             has_ended = true;

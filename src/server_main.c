@@ -41,15 +41,21 @@ int server_main(int argc, char *argv[]) {
 
     if (socket_bind_and_listen(server_socket, port) != EXIT_SUCCESS) {
         rope_destroy(rope);
+        free(rope);
         socket_destroy(server_socket);
+        free(server_socket);
         socket_destroy(client_socket);
+        free(client_socket);
         return EXIT_FAILURE;
     }
 
     if (socket_accept(server_socket, client_socket) != EXIT_SUCCESS) {
         rope_destroy(rope);
+        free(rope);
         socket_destroy(server_socket);
+        free(server_socket);
         socket_destroy(client_socket);
+        free(client_socket);
         return EXIT_FAILURE;
     }
 
@@ -74,15 +80,17 @@ int server_main(int argc, char *argv[]) {
     unsigned short response_size;
 
     /* opero recibiendo de a una operación por vez, para evitar los overflows */
-    while (!the_end_is_here && (received = socket_receive(client_socket, (char*) &msg_length, _SIZE_OF_UINT32_)) > 0) {
-
+    while (!the_end_is_here
+            && (
+            received = socket_receive(client_socket,
+            (char*) &msg_length,
+            _SIZE_OF_UINT32_)) > 0) {
         msg_length = ntohl(msg_length);
 
         received = socket_receive(client_socket, recv_buffer, msg_length);
 
         the_end_is_here = (received <= 0);
         if (!the_end_is_here) {
-
             ptr_shift = 0;
             opcode = 0;
             pos = 0;
@@ -90,8 +98,7 @@ int server_main(int argc, char *argv[]) {
             to = 0;
             sprint_size = 0;
 
-            while (ptr_shift < received) { // EOT
-
+            while (ptr_shift < received) {
                 memcpy(
                         (void*) &opcode,
                         (void*) (recv_buffer + ptr_shift),
@@ -190,8 +197,14 @@ int server_main(int argc, char *argv[]) {
                                 sprint_size);
 
                         response_size = htons(sprint_size);
-                        socket_send(client_socket, (char*) &response_size, _SIZE_OF_SHORT_);
+                        socket_send(client_socket,
+                                (char*) &response_size,
+                                _SIZE_OF_SHORT_);
                         socket_send(client_socket, send_buffer, sprint_size);
+
+                        /* Limpio el buffer para que el próximo envío no re-
+                          envíe el buffer anterior. */
+                        memset(send_buffer, 0, MAX_DATA_BUFFER);
 
                         break;
 
@@ -199,8 +212,6 @@ int server_main(int argc, char *argv[]) {
                         puts("Operación inexistente.");
                         ptr_shift = received;
                 }
-
-
             }
         }
     }
@@ -211,8 +222,10 @@ int server_main(int argc, char *argv[]) {
 
     socket_shutdown(server_socket);
     socket_destroy(server_socket);
+    free(server_socket);
     socket_shutdown(client_socket);
     socket_destroy(client_socket);
+    free(client_socket);
 
     if (received >= 0) {
         return EXIT_SUCCESS;

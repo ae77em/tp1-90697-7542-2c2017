@@ -82,6 +82,7 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
 
     if (socket_connect(client_socket, host, port) != EXIT_SUCCESS) {
         socket_destroy(client_socket);
+        free(client_socket);
         return;
     }
 
@@ -140,7 +141,10 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
     char response_buffer[MAX_DATA_BUFFER];
     bool the_end_is_here = false;
 
-    while (!the_end_is_here && (recv = socket_receive(client_socket, (char*) &msg_length, _SIZE_OF_SHORT_)) > 0) {
+    while (!the_end_is_here
+            && (recv = socket_receive(client_socket,
+            (char*) &msg_length,
+            _SIZE_OF_SHORT_)) > 0) {
         msg_length = ntohs(msg_length);
 
         recv = socket_receive(client_socket, response_buffer, msg_length);
@@ -148,7 +152,7 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
 
         if (!the_end_is_here) {
             response_buffer[msg_length] = '\0';
-            puts(response_buffer);
+            printf("%s", response_buffer);
         } else {
             puts("No se obtuvo la respuesta esperada del servidor.");
         }
@@ -156,6 +160,7 @@ static void do_client_proccessing(char *host, unsigned short port, FILE* file) {
 
     socket_shutdown(client_socket);
     socket_destroy(client_socket);
+    free(client_socket);
 }
 
 static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
@@ -181,7 +186,7 @@ static void send_insert(socket_t *sock, int fst_param, char *scnd_param) {
 
 static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
     int size = sizeof (struct delete_command_t);
-    char buffer[size];
+    char buffer[MAX_DATA_BUFFER];
 
     struct delete_command_t sc = {
         .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
@@ -196,7 +201,7 @@ static void send_delete(socket_t *sock, int fst_param, int scnd_param) {
 
 static void send_space(socket_t *sock, int fst_param) {
     int size = sizeof (struct space_command_t);
-    char buffer[size];
+    char buffer[MAX_DATA_BUFFER];
 
     struct space_command_t sc = {
         .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
@@ -210,7 +215,7 @@ static void send_space(socket_t *sock, int fst_param) {
 
 static void send_newline(socket_t *sock, int fst_param) {
     int size = sizeof (struct newline_command_t);
-    char buffer[size];
+    char buffer[MAX_DATA_BUFFER];
 
     struct newline_command_t nc = {
         .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
@@ -224,7 +229,7 @@ static void send_newline(socket_t *sock, int fst_param) {
 
 static void send_print(socket_t * sock) {
     int size = sizeof (struct print_command_t);
-    char buffer[size];
+    char buffer[MAX_DATA_BUFFER];
 
     struct print_command_t pc = {
         .msg_lenght = htonl(size - _SIZE_OF_UINT32_),
